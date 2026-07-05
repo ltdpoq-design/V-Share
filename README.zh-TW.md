@@ -17,9 +17,7 @@
 [![版本 v3.0.0](https://img.shields.io/badge/%E7%89%88%E6%9C%AC-v3.0.0-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-yellow.svg)](requirements.txt)
 [![多語系](https://img.shields.io/badge/i18n-7%20%E7%A8%AE%E8%AA%9E%E8%A8%80-purple.svg)](#-多語系)
-[![線上展示](https://img.shields.io/badge/demo-share.vivi.homes-ff69b4.svg)](https://share.vivi.homes)
 
-> 🌐 線上展示：**<https://share.vivi.homes>**
 > 📦 程式碼倉庫：**<https://github.com/ltdpoq-design/V-Share>**
 > 📝 版本發佈說明：[v3.0.0（2026-07-05）](https://github.com/ltdpoq-design/V-Share/releases/tag/v3.0.0)
 
@@ -85,10 +83,10 @@ V Share 在 `static/i18n.js` 與 `static/i18n/` 提供完整的在地化機制�
 
 ```bash
 # 取得所有支援的語系
-curl https://share.vivi.homes/api/i18n
+curl http://127.0.0.1:5001/api/i18n
 
 # 取得繁體中文翻譯表
-curl https://share.vivi.homes/api/i18n/zh-TW
+curl http://127.0.0.1:5001/api/i18n/zh-TW
 ```
 
 ## 🔌 API 一覽

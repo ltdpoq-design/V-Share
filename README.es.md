@@ -17,9 +17,7 @@ Pega texto o arrastra un archivo, obtén al instante un enlace compartible y má
 [![Versión v3.0.0](https://img.shields.io/badge/versi%C3%B3n-v3.0.0-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-yellow.svg)](requirements.txt)
 [![Idiomas](https://img.shields.io/badge/i18n-7%20idiomas-purple.svg)](#-idiomas--i18n)
-[![Demo en vivo](https://img.shields.io/badge/demo-share.vivi.homes-ff69b4.svg)](https://share.vivi.homes)
 
-> 🌐 Demo en vivo: **<https://share.vivi.homes>**
 > 📦 Repositorio: **<https://github.com/ltdpoq-design/V-Share>**
 > 📝 Notas de la versión: [v3.0.0 (2026-07-05)](https://github.com/ltdpoq-design/V-Share/releases/tag/v3.0.0)
 
@@ -85,10 +83,10 @@ V Share incluye una capa de localización completa en `static/i18n.js` y siete t
 
 ```bash
 # Lista de idiomas disponibles
-curl https://share.vivi.homes/api/i18n
+curl http://127.0.0.1:5001/api/i18n
 
 # Tabla en español
-curl https://share.vivi.homes/api/i18n/es
+curl http://127.0.0.1:5001/api/i18n/es
 ```
 
 ## 🔌 API

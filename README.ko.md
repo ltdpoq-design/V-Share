@@ -17,9 +17,7 @@
 [![버전 v3.0.0](https://img.shields.io/badge/%EB%B2%84%EC%A0%84-v3.0.0-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-yellow.svg)](requirements.txt)
 [![다국어](https://img.shields.io/badge/i18n-7%EA%B0%9C%EC%96%B8%EC%96%B4-purple.svg)](#-다국어--i18n)
-[![라이브 데모](https://img.shields.io/badge/demo-share.vivi.homes-ff69b4.svg)](https://share.vivi.homes)
 
-> 🌐 라이브 데모：**<https://share.vivi.homes>**
 > 📦 저장소：**<https://github.com/ltdpoq-design/V-Share>**
 > 📝 릴리스 노트：[v3.0.0 (2026-07-05)](https://github.com/ltdpoq-design/V-Share/releases/tag/v3.0.0)
 
@@ -85,10 +83,10 @@ V Share는 `static/i18n.js`와 `static/i18n/` 안의 7개 JSON 테이블로 완�
 
 ```bash
 # 지원 언어 목록
-curl https://share.vivi.homes/api/i18n
+curl http://127.0.0.1:5001/api/i18n
 
 # 한국어 번역 테이블
-curl https://share.vivi.homes/api/i18n/ko
+curl http://127.0.0.1:5001/api/i18n/ko
 ```
 
 ## 🔌 API

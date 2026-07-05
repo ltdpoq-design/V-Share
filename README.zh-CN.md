@@ -17,9 +17,7 @@
 [![Version v3.0.0](https://img.shields.io/badge/version-v3.0.0-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-yellow.svg)](requirements.txt)
 [![Languages](https://img.shields.io/badge/i18n-7%20languages-purple.svg)](#-多语言)
-[![Live Demo](https://img.shields.io/badge/demo-share.vivi.homes-ff69b4.svg)](https://share.vivi.homes)
 
-> 🌐 在线演示：**<https://share.vivi.homes>**
 > 📦 仓库地址：**<https://github.com/ltdpoq-design/V-Share>**
 > 📝 发布说明：[v3.0.0（2026-07-05）](https://github.com/ltdpoq-design/V-Share/releases/tag/v3.0.0)
 
@@ -85,10 +83,10 @@ V Share 在 `static/i18n.js` 和 `static/i18n/` 下准备好了完整的本地�
 
 ```bash
 # 拉所有支持的语言
-curl https://share.vivi.homes/api/i18n
+curl http://127.0.0.1:5001/api/i18n
 
 # 拉英文翻译表
-curl https://share.vivi.homes/api/i18n/en
+curl http://127.0.0.1:5001/api/i18n/en
 ```
 
 ## 🔌 API 接口
