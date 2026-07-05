@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
+
+# Virtualenv
+venv/
+.venv/
+env/
+
+# Database — 包含所有用户分享内容，绝不能上传！
+shares.db
+shares.db-journal
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# 上传文件 — 用户的真实分享内容
+uploads/*
+!uploads/.gitkeep
+
+# 日志
+logs/
+*.log
+
+# 备份
+.backup/
+*.bak
+*.backup
+*.swp
+*.swo
+
+# 环境变量 / 密钥
+.env
+.env.local
+.env.*.local
+
+# IDE / 编辑器
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# 系统临时
+*~
+.directory

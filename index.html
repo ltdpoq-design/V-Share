@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#00d4ff">
+<meta name="description" content="V Share - 无任何隐私的人人可用的多设备内容便捷分享器">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<!-- Favicon 全平台 -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+<link rel="manifest" href="/static/site.webmanifest">
+
+<title>V Share - 无任何隐私的人人可用的多设备内容便捷分享器</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+    --primary: #00d4ff;
+    --secondary: #ff00ea;
+    --accent: #00ff88;
+    --bg: #050514;
+    --surface: rgba(20, 20, 50, 0.6);
+    --text: #e0e0ff;
+    --border: rgba(0, 212, 255, 0.3);
+}
+html, body {
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+}
+body {
+    background:
+        radial-gradient(ellipse at 20% 30%, rgba(0, 212, 255, 0.15), transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(255, 0, 234, 0.15), transparent 50%),
+        var(--bg);
+    background-attachment: fixed;
+}
+
+/* === 背景动效：网格 + 粒子 + 扫描线 === */
+.grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(0, 212, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 255, 0.08) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: gridMove 15s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+@keyframes gridMove {
+    0% { background-position: 0 0; }
+    100% { background-position: 50px 50px; }
+}
+.particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+.particle {
+    position: absolute;
+    background: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--primary), 0 0 15px var(--primary);
+    animation: floatUp linear infinite;
+    opacity: 0.6;
+}
+.particle:nth-child(3n) {
+    background: var(--secondary);
+    box-shadow: 0 0 8px var(--secondary), 0 0 15px var(--secondary);
+    animation-duration: 12s;
+}
+.particle:nth-child(5n) {
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent), 0 0 15px var(--accent);
+    animation-duration: 9s;
+}
+@keyframes floatUp {
+    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.8; }
+    100% { transform: translateY(-10vh) translateX(50px); opacity: 0; }
+}
+/* 顶部扫描线 */
+.scan-line {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    box-shadow: 0 0 10px var(--primary);
+    z-index: 5;
+    animation: scanMove 4s linear infinite;
+    pointer-events: none;
+}
+@keyframes scanMove {
+    0% { top: 0; opacity: 0; }
+    5% { opacity: 1; }
+    95% { opacity: 1; }
+    100% { top: 100vh; opacity: 0; }
+}
+
+/* === 主体两栏布局 === */
+.layout {
+    position: relative;
+    z-index: 10;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+}
+.main-col { min-width: 0; }
+.side-col {
+    min-width: 0;
+    position: sticky;
+    top: 20px;
+    align-self: start;
+    max-height: calc(100vh - 40px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.logo {
+    text-align: center;
+    font-size: 2.4em;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+    letter-spacing: 3px;
+    animation: logoGradient 6s ease infinite;
+    text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+}
+@keyframes logoGradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+.subtitle {
+    text-align: center;
+    font-size: 0.85em;
+    color: var(--text);
+    opacity: 0.7;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    font-weight: 500;
+    animation: subtitleGlow 3s ease-in-out infinite;
+}
+.subtitle-en {
+    text-align: center;
+    font-size: 0.7em;
+    opacity: 0.4;
+    letter-spacing: 4px;
+    margin-bottom: 30px;
+    animation: subtitleGlow 3s ease-in-out infinite;
+    font-family: 'SF Mono', Monaco, monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.subtitle-en .device-badge {
+    margin-left: 0;
+}
+@keyframes subtitleGlow {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.7; }
+}
+/* 设备自适应标识 */
+.device-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    margin-left: 8px;
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.55em;
+    opacity: 0.7;
+    vertical-align: middle;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    position: relative;
+}
+.tab {
+    flex: 1;
+    padding: 14px;
+    background: rgba(20, 20, 50, 0.4);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.tab::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+.tab:hover { border-color: var(--primary); transform: translateY(-2px); }
+.tab:hover::before { left: 100%; }
+.tab.active {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(255, 0, 234, 0.2));
+    border-color: var(--primary);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3), inset 0 0 20px rgba(0, 212, 255, 0.1);
+}
+
+/* Card */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px;
+    backdrop-filter: blur(20px);
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+.card::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, transparent, var(--primary), transparent, var(--secondary), transparent);
+    background-size: 400% 400%;
+    border-radius: 18px;
+    z-index: -1;
+    opacity: 0;
+    animation: borderGlow 8s linear infinite;
+    transition: opacity 0.3s;
+}
+.card:hover::before { opacity: 0.5; }
+@keyframes borderGlow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+.card-title {
+    color: var(--primary);
+    margin-bottom: 16px;
+    font-size: 1.1em;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.close-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 50, 50, 0.1);
+    border: 1px solid rgba(255, 50, 50, 0.3);
+    border-radius: 50%;
+    color: #ff8080;
+    font-size: 1.2em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1;
+    padding: 0;
+}
+.close-btn:hover {
+    background: rgba(255, 50, 50, 0.3);
+    box-shadow: 0 0 15px rgba(255, 50, 50, 0.5);
+    transform: rotate(90deg);
+}
+.side-col.closed {
+    display: none;
+}
+.fab-show-list {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: 700;
+    cursor: pointer;
+    z-index: 50;
+    box-shadow: 0 5px 20px rgba(0, 212, 255, 0.5);
+    font-size: 0.9em;
+}
+.fab-show-list.show { display: inline-flex; align-items: center; gap: 6px; }
+.fab-show-list:hover { transform: scale(1.05); }
+
+/* 阅后即焚 */
+.burn-label {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 12px 14px;
+    background: rgba(255, 100, 0, 0.05);
+    border: 1px solid rgba(255, 100, 0, 0.3);
+    border-radius: 10px;
+    transition: all 0.2s;
+    margin-bottom: 0 !important;
+}
+.burn-label:hover {
+    background: rgba(255, 100, 0, 0.1);
+    border-color: rgba(255, 100, 0, 0.6);
+}
+.burn-checkbox {
+    width: 18px !important;
+    height: 18px;
+    padding: 0;
+    cursor: pointer;
+    accent-color: #ff6400;
+    flex-shrink: 0;
+}
+.burn-text {
+    color: #ff8800;
+    font-weight: 700;
+    font-size: 0.95em;
+    flex-shrink: 0;
+}
+.burn-hint {
+    color: var(--text);
+    opacity: 0.6;
+    font-size: 0.78em;
+    font-weight: 400;
+    flex: 1;
+}
+.burned-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, rgba(255, 100, 0, 0.3), rgba(255, 0, 0, 0.3));
+    border: 1px solid #ff6400;
+    border-radius: 12px;
+    color: #ff8800;
+    font-size: 0.72em;
+    font-weight: 700;
+    animation: firePulse 1.2s ease-in-out infinite;
+}
+@keyframes firePulse {
+    0%, 100% { box-shadow: 0 0 5px rgba(255, 100, 0, 0.4); }
+    50% { box-shadow: 0 0 15px rgba(255, 100, 0, 0.8); }
+}
+.device-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    background: rgba(0, 212, 255, 0.15);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.7em;
+    color: var(--primary);
+    margin-left: 4px;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+/* 版本条 */
+.version-bar {
+    text-align: center;
+    padding: 20px 20px 12px;
+    margin-top: 16px;
+    color: var(--text);
+    opacity: 0.7;
+    font-family: 'SF Mono', Monaco, monospace;
+    line-height: 1.6;
+    position: relative;
+}
+.version-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+}
+.version-line-main {
+    font-size: 0.85em;
+    animation: versionGlow 4s ease-in-out infinite;
+}
+.version-line-sub {
+    font-size: 0.7em;
+    opacity: 0.7;
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+}
+.version-line-future {
+    font-size: 0.72em;
+    font-style: italic;
+    margin-top: 8px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% 200%;
+    animation: futureGradient 8s linear infinite;
+    letter-spacing: 1px;
+}
+@keyframes futureGradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+@keyframes versionGlow {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+}
+.version-bar strong {
+    color: var(--primary);
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.field { margin-bottom: 20px; }
+label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--primary);
+    font-size: 0.95em;
+    font-weight: 600;
+}
+textarea, input[type=text], select {
+    width: 100%;
+    padding: 16px 18px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 1em;
+    font-family: inherit;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+textarea {
+    min-height: 160px;
+    font-family: 'SF Mono', Monaco, monospace;
+    cursor: text;
+    resize: vertical;
+    line-height: 1.5;
+}
+textarea:focus, input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3), inset 0 0 10px rgba(0, 212, 255, 0.1);
+    background: rgba(0, 0, 0, 0.6);
+}
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%2300d4ff' d='M6 8L0 0h12z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 18px center;
+    padding-right: 45px;
+}
+.file-drop {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 50px 20px;
+    text-align: center;
+    transition: all 0.3s;
+    cursor: pointer;
+    background: rgba(0, 212, 255, 0.03);
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+.file-drop::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent, var(--primary), transparent 30%);
+    animation: rotateBorder 4s linear infinite;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.file-drop:hover { border-color: var(--primary); background: rgba(0, 212, 255, 0.08); }
+.file-drop:hover::after { opacity: 0.15; }
+.file-drop.drag-over { border-color: var(--accent); background: rgba(0, 255, 136, 0.1); transform: scale(1.02); }
+@keyframes rotateBorder {
+    100% { transform: rotate(360deg); }
+}
+.file-icon { font-size: 3.5em; margin-bottom: 12px; z-index: 1; }
+.file-info {
+    margin-top: 14px;
+    padding: 14px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+    font-size: 0.9em;
+    width: 100%;
+    z-index: 1;
+    position: relative;
+}
+.btn {
+    display: inline-block;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    text-decoration: none;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.btn::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -100%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+}
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3);
+}
+.btn:hover::after { left: 100%; }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-full { width: 100%; display: block; }
+.btn-copy {
+    padding: 6px 12px;
+    background: var(--accent);
+    color: black;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.85em;
+    transition: all 0.2s;
+}
+.btn-copy:hover { box-shadow: 0 0 15px rgba(0, 255, 136, 0.6); transform: scale(1.05); }
+.btn-go {
+    padding: 6px 12px;
+    background: var(--primary);
+    color: black;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.85em;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+}
+.btn-go:hover { box-shadow: 0 0 15px rgba(0, 212, 255, 0.6); transform: scale(1.05); }
+.share-link-box {
+    display: flex;
+    gap: 8px;
+    padding: 14px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    margin-top: 16px;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+    animation: resultAppear 0.5s ease-out;
+}
+@keyframes resultAppear {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.share-link-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 0.9em;
+    padding: 8px;
+}
+.countdown {
+    display: inline-block;
+    padding: 6px 14px;
+    background: rgba(0, 255, 136, 0.15);
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    color: var(--accent);
+    font-family: 'SF Mono', monospace;
+    font-size: 0.9em;
+    animation: pulse 2s ease-in-out infinite;
+}
+.countdown.short {
+    background: rgba(255, 165, 0, 0.15);
+    border-color: orange;
+    color: orange;
+    animation-duration: 0.8s;
+}
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); }
+    50% { box-shadow: 0 0 0 10px rgba(0, 255, 136, 0); }
+}
+.expired-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(255, 50, 50, 0.15);
+    border: 1px solid #ff3232;
+    border-radius: 20px;
+    color: #ff8080;
+    font-size: 0.85em;
+    animation: warningPulse 1.5s ease-in-out infinite;
+}
+@keyframes warningPulse {
+    0%, 100% { box-shadow: 0 0 5px rgba(255, 50, 50, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(255, 50, 50, 0.6); }
+}
+
+/* 侧边栏列表 */
+.side-list {
+    overflow-y: auto;
+    padding-right: 4px;
+    flex: 1;
+    max-height: calc(100vh - 180px);
+}
+.side-list::-webkit-scrollbar { width: 4px; }
+.side-list::-webkit-scrollbar-track { background: rgba(0, 212, 255, 0.05); }
+.side-list::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--primary), var(--secondary)); border-radius: 2px; }
+/* 多行直接显示区（无滚动也能看 5-6 条） */
+.list-item {
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    transition: all 0.3s;
+    animation: listItemIn 0.4s ease-out backwards;
+}
+.partial-shown {
+    background: linear-gradient(90deg, rgba(0, 212, 255, 0.15), transparent);
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-family: 'SF Mono', monospace;
+}
+@keyframes listItemIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.list-item:hover { border-color: var(--primary); transform: translateX(2px); box-shadow: 0 0 15px rgba(0, 212, 255, 0.2); }
+.list-item-info { min-width: 0; }
+.list-item-title {
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 4px;
+    word-break: break-all;
+    font-size: 0.85em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.list-item-meta {
+    font-size: 0.72em;
+    opacity: 0.7;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 4px;
+}
+.list-item-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+}
+.list-item-actions .btn-copy,
+.list-item-actions .btn-go {
+    padding: 5px 8px;
+    font-size: 0.75em;
+    flex: 1;
+    text-align: center;
+}
+.list-item-actions .btn-jump {
+    padding: 5px 8px;
+    font-size: 0.75em;
+    flex: 1;
+    text-align: center;
+    background: linear-gradient(135deg, var(--accent), #00cc6e);
+    color: black;
+    border: none;
+    border-radius: 6px;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+}
+.list-item-actions .btn-jump:hover { box-shadow: 0 0 10px rgba(0, 255, 136, 0.5); }
+.list-item.expired { opacity: 0.6; border-style: dashed; }
+.list-item.locked { opacity: 0.5; }
+.list-item-submeta {
+    font-size: 0.68em;
+    opacity: 0.7;
+    margin-top: 4px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.viewed-info, .burned-info {
+    color: var(--text);
+    opacity: 0.6;
+    font-family: 'SF Mono', monospace;
+}
+.burned-info { color: #ff8800; opacity: 0.8; }
+.btn-disabled {
+    flex: 1;
+    padding: 5px 8px;
+    background: rgba(80, 80, 80, 0.3);
+    color: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(80, 80, 80, 0.3);
+    border-radius: 6px;
+    font-size: 0.75em;
+    font-weight: 700;
+    cursor: not-allowed;
+    text-align: center;
+}
+.masked {
+    font-family: 'SF Mono', monospace;
+    color: #ff8080;
+    background: rgba(255, 50, 50, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* 底部存储条 */
+.footer {
+    position: relative;
+    z-index: 10;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px 30px;
+}
+.storage-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px 24px;
+    backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
+    animation: storageCardPulse 4s ease-in-out infinite;
+}
+@keyframes storageCardPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.1); }
+    50% { box-shadow: 0 0 30px rgba(0, 212, 255, 0.3); }
+}
+.storage-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), var(--accent), transparent);
+    animation: storageScan 3s linear infinite;
+}
+.storage-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at top right, rgba(0, 212, 255, 0.1), transparent 60%);
+    pointer-events: none;
+}
+@keyframes storageScan {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+.storage-icon {
+    font-size: 2.5em;
+    filter: drop-shadow(0 0 8px var(--primary));
+    animation: storageIconSpin 8s linear infinite;
+    z-index: 1;
+}
+@keyframes storageIconSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.storage-info {
+    flex: 1;
+    min-width: 200px;
+    z-index: 1;
+}
+.storage-label {
+    font-size: 0.85em;
+    color: var(--primary);
+    font-weight: 600;
+    white-space: nowrap;
+    margin-bottom: 8px;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+.storage-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.storage-track {
+    flex: 1;
+    height: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+.storage-track::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(0, 212, 255, 0.1) 25%,
+        rgba(255, 0, 234, 0.1) 50%,
+        rgba(0, 255, 136, 0.1) 75%,
+        transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: trackShimmer 3s linear infinite;
+}
+@keyframes trackShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+.storage-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    background-size: 200% 100%;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 15px var(--accent), inset 0 0 10px rgba(255, 255, 255, 0.3);
+    position: relative;
+    animation: fillColorShift 6s linear infinite;
+}
+@keyframes fillColorShift {
+    0% { background-position: 0% 0; }
+    100% { background-position: 200% 0; }
+}
+.storage-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 30px;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6));
+    animation: fillShimmer 1.2s ease-in-out infinite;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+}
+@keyframes fillShimmer {
+    0%, 100% { opacity: 0.3; transform: translateX(-10px); }
+    50% { opacity: 1; transform: translateX(0); }
+}
+.storage-text {
+    font-size: 0.9em;
+    color: var(--accent);
+    font-family: 'SF Mono', monospace;
+    white-space: nowrap;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    font-weight: 600;
+    min-width: 180px;
+    text-align: right;
+}
+.storage-num {
+    display: inline-block;
+    min-width: 50px;
+    text-align: right;
+    transition: all 0.3s;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    font-size: 1.1em;
+}
+
+/* 浮动跳转按钮 - JS 控制显示，CSS 兜底（Safari 兼容） */
+.fab-jump {
+    display: none;
+    position: fixed;
+    bottom: max(20px, env(safe-area-inset-bottom, 20px));
+    right: max(20px, env(safe-area-inset-right, 20px));
+    padding: 12px 18px 12px 18px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: 700;
+    cursor: pointer;
+    z-index: 9999;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    box-shadow: 0 5px 20px rgba(0, 212, 255, 0.5);
+    animation: fabBounce 2s ease-in-out infinite;
+    font-size: 0.9em;
+    align-items: center;
+    gap: 6px;
+    /* Safari 兼容 */
+    -webkit-tap-highlight-color: transparent;
+    visibility: visible;
+    opacity: 1;
+    /* 触摸目标最小 44pt (iOS HIG) */
+    min-height: 44px;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+.fab-jump.show-mobile {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+.fab-jump .fab-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.fab-jump .fab-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    margin-left: 4px;
+    background: rgba(255, 50, 50, 0.25);
+    border: 1px solid rgba(255, 80, 80, 0.5);
+    border-radius: 50%;
+    color: #ff8080;
+    font-size: 1.1em;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.fab-jump .fab-close:hover {
+    background: rgba(255, 50, 50, 0.5);
+    box-shadow: 0 0 10px rgba(255, 50, 50, 0.6);
+    transform: rotate(90deg);
+}
+.fab-jump.hidden { display: none !important; }
+@keyframes fabBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+.fab-jump:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 30px rgba(0, 212, 255, 0.7);
+}
+.fab-jump .badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 6px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 10px;
+    font-size: 0.8em;
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    padding: 14px 24px;
+    background: rgba(20, 20, 50, 0.95);
+    border: 1px solid var(--primary);
+    border-radius: 10px;
+    color: var(--text);
+    z-index: 1000;
+    opacity: 0;
+    transition: all 0.3s;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 212, 255, 0.3);
+    backdrop-filter: blur(10px);
+}
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+.toast.error { border-color: #ff3232; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 50, 50, 0.5); }
+
+/* 响应式 */
+@media (max-width: 900px) {
+    .layout {
+        grid-template-columns: 1fr;
+        padding: 20px 16px;
+    }
+    .side-col {
+        position: static;
+        max-height: none;
+        overflow: visible;
+    }
+    .side-list {
+        max-height: 500px;
+    }
+    .logo { font-size: 1.8em; }
+    .card { padding: 20px; }
+    .tab { padding: 10px; font-size: 0.9em; }
+    .footer { padding: 0 16px 20px; }
+    /* fab-jump 由 JS 控制（Safari 兼容） */
+    /* 移动端副标题排版优化 */
+    .subtitle { font-size: 0.75em; padding: 0 8px; }
+    .subtitle-en {
+        font-size: 0.65em;
+        letter-spacing: 2px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .subtitle-en::before { content: ''; flex: 0 0 100%; height: 0; }
+}
+@media (max-width: 480px) {
+    .logo { font-size: 1.5em; }
+    .subtitle { font-size: 0.7em; }
+    .subtitle-en { font-size: 0.58em; letter-spacing: 1.5px; }
+}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="particles" id="particles"></div>
+<div class="scan-line"></div>
+
+<div class="layout">
+<!-- 左侧主区 -->
+<div class="main-col">
+    <div class="logo">V SHARE</div>
+    <div class="subtitle" id="subtitle-zh">
+        无任何隐私的人人可用的多设备内容便捷分享器
+    </div>
+    <div class="subtitle-en" id="subtitle-en">
+        NEON DROP · ZERO TRACE · ONE TAP SHARE
+        <span class="device-badge" id="device-badge">📱 加载中</span>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="text">📝 文本</button>
+        <button class="tab" data-tab="url">🔗 网址</button>
+        <button class="tab" data-tab="file">📎 文件</button>
+    </div>
+
+    <div id="panel-text" class="card">
+        <div class="field">
+            <label>分享内容</label>
+            <textarea id="text-input" placeholder="粘贴任何文本 / 笔记 / 代码片段..."></textarea>
+        </div>
+        <div class="field">
+            <label>过期时间</label>
+            <select id="text-expire">
+                <option value="10m">⏱ 10 分钟</option>
+                <option value="30m">⏱ 30 分钟</option>
+                <option value="1h">⏰ 1 小时</option>
+                <option value="24h">📅 24 小时</option>
+                <option value="48h">📅 48 小时</option>
+                <option value="72h" selected>🗓 72 小时 (默认)</option>
+            </select>
+        </div>
+        <div class="field">
+            <label class="burn-label">
+                <input type="checkbox" id="text-burn" class="burn-checkbox">
+                <span class="burn-text">🔥 阅后即焚</span>
+                <span class="burn-hint">第一个看到的人阅读后即焚毁（按原过期时间彻底删除）</span>
+            </label>
+        </div>
+        <button class="btn btn-full" onclick="submitText()">⚡ 创建分享</button>
+    </div>
+
+    <div id="panel-url" class="card" style="display:none">
+        <div class="field">
+            <label>网址</label>
+            <input type="text" id="url-input" placeholder="https://example.com">
+        </div>
+        <div class="field">
+            <label>过期时间</label>
+            <select id="url-expire">
+                <option value="10m">⏱ 10 分钟</option>
+                <option value="30m">⏱ 30 分钟</option>
+                <option value="1h">⏰ 1 小时</option>
+                <option value="24h">📅 24 小时</option>
+                <option value="48h">📅 48 小时</option>
+                <option value="72h" selected>🗓 72 小时 (默认)</option>
+            </select>
+        </div>
+        <div class="field">
+            <label class="burn-label">
+                <input type="checkbox" id="url-burn" class="burn-checkbox">
+                <span class="burn-text">🔥 阅后即焚</span>
+                <span class="burn-hint">第一个看到的人阅读后即焚毁</span>
+            </label>
+        </div>
+        <button class="btn btn-full" onclick="submitUrl()">🔗 分享网址</button>
+    </div>
+
+    <div id="panel-file" class="card" style="display:none">
+        <div class="field">
+            <label>选择文件 (最大 100 MB)</label>
+            <div class="file-drop" id="file-drop">
+                <div class="file-icon">📁</div>
+                <div style="font-size: 1.05em;">点击选择 或 拖拽文件到这里</div>
+                <input type="file" id="file-input" style="display:none">
+            </div>
+            <div class="file-info" id="file-info" style="display:none"></div>
+        </div>
+        <div class="field">
+            <label>过期时间</label>
+            <select id="file-expire">
+                <option value="10m">⏱ 10 分钟</option>
+                <option value="30m">⏱ 30 分钟</option>
+                <option value="1h">⏰ 1 小时</option>
+                <option value="24h">📅 24 小时</option>
+                <option value="48h">📅 48 小时</option>
+                <option value="72h" selected>🗓 72 小时 (默认)</option>
+            </select>
+        </div>
+        <div class="field">
+            <label class="burn-label">
+                <input type="checkbox" id="file-burn" class="burn-checkbox">
+                <span class="burn-text">🔥 阅后即焚</span>
+                <span class="burn-hint">第一个下载/查看的人阅读后即焚毁</span>
+            </label>
+        </div>
+        <button class="btn btn-full" id="file-submit" onclick="submitFile()" disabled>📤 上传分享</button>
+    </div>
+
+    <div id="result-area"></div>
+</div>
+
+<!-- 右侧栏 - 最近分享 -->
+<div class="side-col" id="side-col">
+    <div class="card">
+        <h2 class="card-title">
+            📋 最近分享
+        </h2>
+        <div id="shares-list" class="side-list">加载中...</div>
+    </div>
+</div>
+</div>
+
+<!-- 浮动跳转按钮 (仅移动端显示) -->
+<button class="fab-jump" id="fab-jump" onclick="jumpToList()">
+    <span class="fab-content">📋 跳到最近分享 <span class="badge" id="fab-count">0</span></span>
+    <span class="fab-close" id="fab-close" title="关闭">×</span>
+</button>
+
+<!-- 浮动显示列表按钮 (侧栏被关后显示) -->
+<button class="fab-show-list" id="fab-show-list">
+    📋 显示列表
+</button>
+
+<!-- 底部存储条 -->
+<div class="footer">
+    <div class="storage-card">
+        <div class="storage-icon">💾</div>
+        <div class="storage-info">
+            <div class="storage-label">⚡ 存储空间 · 实时监控</div>
+            <div class="storage-bar-wrap">
+                <div class="storage-track">
+                    <div class="storage-fill" id="storage-fill" style="width: 0%"></div>
+                </div>
+                <div class="storage-text">
+                    <span class="storage-num" id="storage-used">0.0</span> MB / 5120 MB
+                    <span style="opacity:0.7; margin-left:6px;">(<span class="storage-num" id="storage-percent">0.00</span>%)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="version-bar">
+        <div class="version-line-main">
+            🚀 <strong id="app-name">V Share</strong>
+            v<span id="app-version">2.9.2</span>
+            · 发布于 <span id="app-released">2026-06-30</span>
+        </div>
+        <div class="version-line-sub">
+            <span id="app-changelog">NEON DROP · ZERO TRACE · ONE TAP SHARE</span>
+        </div>
+        <div class="version-line-future">
+            「 链接来过，痕迹不必留下 」
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// === 设备检测 ===
+let currentDevice = 'unknown';
+function detectDevice() {
+    const w = window.innerWidth;
+    let device, icon;
+    if (w < 600) { device = '手机'; icon = '📱'; }
+    else if (w < 1024) { device = '平板'; icon = '📱'; }
+    else { device = 'PC'; icon = '💻'; }
+    currentDevice = device;
+    const badge = document.getElementById('device-badge');
+    if (badge) badge.textContent = icon + ' ' + device;
+    // 同时控制 fab-jump 显示（Safari 兼容：不用 media query）
+    updateFabJump(w);
+    return { device, width: w };
+}
+
+// 根据宽度控制 fab-jump 显示（Safari 兼容）
+function updateFabJump(width) {
+    const fab = document.getElementById('fab-jump');
+    if (!fab) return;
+    // 如果用户明确关闭了，不显示
+    if (localStorage.getItem('fab-jump-closed') === '1' && width <= 900) {
+        fab.classList.remove('show-mobile');
+        fab.classList.add('hidden');
+    } else {
+        fab.classList.remove('hidden');
+        if (width <= 900) {
+            fab.classList.add('show-mobile');
+        } else {
+            fab.classList.remove('show-mobile');
+        }
+        // PC 端清除关闭状态
+        if (width > 900) {
+            localStorage.removeItem('fab-jump-closed');
+        }
+    }
+}
+
+window.addEventListener('resize', detectDevice);
+detectDevice();
+
+// 设备名 → 短标签
+function deviceShort(d) {
+    if (d === '手机') return '📱手机';
+    if (d === '平板') return '📱平板';
+    if (d === 'PC') return '💻PC';
+    return '❓';
+}
+
+// === 粒子动效 ===
+(function() {
+    const particles = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.width = p.style.height = (Math.random() * 4 + 2) + 'px';
+        p.style.animationDelay = Math.random() * 15 + 's';
+        p.style.animationDuration = (Math.random() * 8 + 8) + 's';
+        particles.appendChild(p);
+    }
+})();
+
+// === 转义函数 ===
+function escapeHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+}
+function escapeJs(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+}
+
+// === Toast ===
+function toast(msg, type = 'info') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + (type === 'error' ? 'error' : '');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(
+            () => toast('✓ 已复制到剪贴板'),
+            () => fallbackCopy(text)
+        );
+    } else {
+        fallbackCopy(text);
+    }
+}
+function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); toast('✓ 已复制'); }
+    catch(e) { toast('复制失败', 'error'); }
+    document.body.removeChild(ta);
+}
+
+// === 浮窗：跳到最近分享 ===
+function jumpToList() {
+    const el = document.getElementById('side-col');
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // 高亮效果
+        const card = el.querySelector('.card');
+        if (card) {
+            card.style.transition = 'box-shadow 0.5s';
+            card.style.boxShadow = '0 0 40px rgba(0, 255, 136, 0.6)';
+            setTimeout(() => { card.style.boxShadow = ''; }, 1500);
+        }
+    }
+}
+// X 关闭浮窗（不跳转）
+document.getElementById('fab-close').onclick = (e) => {
+    e.stopPropagation();
+    document.getElementById('fab-jump').classList.add('hidden');
+    localStorage.setItem('fab-jump-closed', '1');
+};
+// 关闭状态由 updateFabJump 处理
+
+// === Tab 切换 ===
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.onclick = () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelectorAll('[id^="panel-"]').forEach(p => p.style.display = 'none');
+        document.getElementById('panel-' + tab.dataset.tab).style.display = '';
+    };
+});
+
+// === 文件选择 ===
+const fileDrop = document.getElementById('file-drop');
+const fileInput = document.getElementById('file-input');
+const fileInfo = document.getElementById('file-info');
+const fileSubmit = document.getElementById('file-submit');
+
+fileDrop.onclick = () => fileInput.click();
+fileDrop.ondragover = e => { e.preventDefault(); fileDrop.classList.add('drag-over'); };
+fileDrop.ondragleave = () => fileDrop.classList.remove('drag-over');
+fileDrop.ondrop = e => {
+    e.preventDefault();
+    fileDrop.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+};
+fileInput.onchange = e => { if (e.target.files[0]) handleFile(e.target.files[0]); };
+
+let currentFile = null;
+function handleFile(f) {
+    if (f.size > 100 * 1024 * 1024) {
+        toast('文件超过 100 MB', 'error');
+        return;
+    }
+    currentFile = f;
+    fileInfo.style.display = '';
+    fileInfo.innerHTML = `
+        <strong>📎 ${escapeHtml(f.name)}</strong><br>
+        大小: ${(f.size / 1024 / 1024).toFixed(2)} MB<br>
+        类型: ${f.type || 'application/octet-stream'}
+    `;
+    fileSubmit.disabled = false;
+}
+
+// === 提交 ===
+async function submitText() {
+    const text = document.getElementById('text-input').value.trim();
+    if (!text) { toast('请输入内容', 'error'); return; }
+    const expire = document.getElementById('text-expire').value;
+    const burn = document.getElementById('text-burn').checked;
+    if (burn) {
+        if (!confirm('⚠️ 阅后即焚确认\n\n第一个看到这条消息的人阅读后，消息将立即变为「已焚」状态。\n\n原过期时间后 30 天彻底删除。\n\n是否继续？')) return;
+    }
+    const fd = new FormData();
+    fd.append('text', text);
+    fd.append('expire', expire);
+    fd.append('device', currentDevice);
+    if (burn) fd.append('burn_after_read', '1');
+    await submitShare(fd);
+}
+
+async function submitUrl() {
+    let url = document.getElementById('url-input').value.trim();
+    if (!url) { toast('请输入网址', 'error'); return; }
+    // 自动补全 http://（网址表单：无协议就补，恢复豆要的自动补足）
+    if (!url.match(/^[a-z][a-z0-9+.-]*:\/\//i)) {
+        if (/\s/.test(url)) {
+            toast('网址不能包含空格', 'error');
+            return;
+        }
+        url = 'http://' + url;
+    }
+    // 大小写归一化常见协议头
+    url = url.replace(/^http:\/\//i, 'http://').replace(/^https:\/\//i, 'https://');
+    const expire = document.getElementById('url-expire').value;
+    const burn = document.getElementById('url-burn').checked;
+    if (burn) {
+        if (!confirm('⚠️ 阅后即焚确认\n\n第一个打开此网址的人阅读后，消息将立即变为「已焚」状态。\n\n原过期时间后 30 天彻底删除。\n\n是否继续？')) return;
+    }
+    const fd = new FormData();
+    fd.append('text', url);
+    fd.append('expire', expire);
+    fd.append('device', currentDevice);
+    if (burn) fd.append('burn_after_read', '1');
+    await submitShare(fd);
+}
+
+async function submitFile() {
+    if (!currentFile) { toast('请选择文件', 'error'); return; }
+    const expire = document.getElementById('file-expire').value;
+    const burn = document.getElementById('file-burn').checked;
+    if (burn) {
+        if (!confirm('⚠️ 阅后即焚确认\n\n第一个下载此文件的人阅读后，文件将立即变为「已焚」状态。\n\n原过期时间后 30 天彻底删除。\n\n是否继续？')) return;
+    }
+    const fd = new FormData();
+    fd.append('file', currentFile);
+    fd.append('expire', expire);
+    fd.append('device', currentDevice);
+    if (burn) fd.append('burn_after_read', '1');
+    await submitShare(fd);
+}
+
+async function submitShare(fd) {
+    try {
+        const resp = await fetch('/api/share', { method: 'POST', body: fd });
+        const data = await resp.json();
+        if (!resp.ok) {
+            toast(data.message || '创建失败', 'error');
+            return;
+        }
+        showResult(data);
+        loadShares();
+        loadStats();
+        toast('✓ 创建成功，3 秒后清空表单...');
+        // 3 秒后清空表单 + 滚动到结果 + 5 秒后清空
+        setTimeout(() => {
+            // 清空当前面板的输入
+            const activePanel = document.querySelector('[id^="panel-"]:not([style*="display: none"])');
+            if (activePanel) {
+                const textarea = activePanel.querySelector('textarea');
+                const input = activePanel.querySelector('input[type="text"]');
+                const checkbox = activePanel.querySelector('input[type="checkbox"]');
+                if (textarea) textarea.value = '';
+                if (input) input.value = '';
+                if (checkbox) checkbox.checked = false;
+                // 文件重置
+                if (activePanel.id === 'panel-file') {
+                    currentFile = null;
+                    fileInfo.style.display = 'none';
+                    fileInfo.innerHTML = '';
+                    fileSubmit.disabled = true;
+                    fileInput.value = '';
+                }
+            }
+            toast('✓ 表单已清空');
+        }, 3000);
+    } catch (e) {
+        toast('网络错误: ' + e.message, 'error');
+    }
+}
+
+function showResult(data) {
+    const result = document.getElementById('result-area');
+    const url = data.url;
+    result.innerHTML = `
+        <div class="card" style="border-color: var(--accent);">
+            <h3 style="color: var(--accent); margin-bottom: 12px;">✓ 分享已创建</h3>
+            <div class="share-link-box">
+                <input type="text" value="${escapeHtml(url)}" readonly id="link-${data.id}">
+                <button class="btn-copy" data-copy="${escapeHtml(url)}">复制</button>
+            </div>
+            <div style="text-align: center; margin-top: 16px;">
+                <span class="countdown" id="cd-${data.id}" data-expires="${data.expires_at}">
+                    剩余: ${formatTime(data.expires_in)}
+                </span>
+            </div>
+        </div>
+    `;
+    // 绑定复制按钮
+    const copyBtn = result.querySelector('.btn-copy');
+    if (copyBtn) {
+        copyBtn.onclick = () => copyToClipboard(copyBtn.getAttribute('data-copy'));
+    }
+    updateCountdowns();
+}
+
+function formatTime(seconds) {
+    if (seconds < 0) seconds = 0;
+    if (seconds < 60) return seconds + ' 秒';
+    if (seconds < 600) {
+        // 剩 10 分钟内显示秒（动态倒计时）
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return m + ' 分 ' + s + ' 秒';
+    }
+    if (seconds < 3600) return Math.floor(seconds / 60) + ' 分钟';
+    if (seconds < 86400) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        return h + ' 时 ' + m + ' 分';
+    }
+    return Math.floor(seconds / 86400) + ' 天';
+}
+
+function updateCountdowns() {
+    document.querySelectorAll('.countdown').forEach(el => {
+        const exp = parseInt(el.dataset.expires);
+        const diff = exp - Math.floor(Date.now() / 1000);
+        if (diff <= 0) {
+            el.outerHTML = '<span class="expired-tag">⏰ 已过期</span>';
+        } else {
+            el.textContent = '剩余: ' + formatTime(diff);
+            el.classList.toggle('short', diff < 600);
+        }
+    });
+    document.querySelectorAll('.list-countdown').forEach(el => {
+        const exp = parseInt(el.dataset.expires);
+        const diff = exp - Math.floor(Date.now() / 1000);
+        if (diff <= 0) {
+            el.outerHTML = '<span class="expired-tag">已过期</span>';
+        } else {
+            el.textContent = '剩 ' + formatTime(diff);
+            el.classList.toggle('short', diff < 600);
+        }
+    });
+}
+
+// === 列表 - 侧边栏 ===
+async function loadShares() {
+    try {
+        const resp = await fetch('/api/list');
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        if (!Array.isArray(data)) throw new Error('Invalid response');
+        const container = document.getElementById('shares-list');
+        if (data.length === 0) {
+            container.innerHTML = '<p style="opacity:0.5; text-align:center; padding:20px; font-size: 0.9em;">还没有分享</p>';
+            updateFabCount(0);
+            return;
+        }
+        const now = Math.floor(Date.now() / 1000);
+        const html = data.map((s, i) => {
+            const isExpired = s.status && s.status !== 'active';
+            const isBurned = s.status === 'burned';
+            // 阅后即焚 + 未过期 + 未焚 = 阅后即焚（首 2 字可见，已焚显示 ***）
+            const isBurnAfterRead = s.burn_after_read && !isBurned && !isExpired;
+            const icon = s.type === 'url' ? '🔗' : s.type === 'file' ? '📎' : '📝';
+            // 预览：后端已经处理打码（未读阅后即焚首 2 字 + *；已焚/过期全 *）
+            let preview;
+            if (s.type === 'file') {
+                preview = s.file_name || '(文件)';
+            } else {
+                preview = s.content || '';
+            }
+            // 判定是否需要 partial-shown 样式（首 2 字可见）
+            const isPartial = isBurnAfterRead && preview.length > 2;
+            const isFullMask = isBurned || isExpired;
+            if (preview.length > 30) preview = preview.slice(0, 30) + '...';
+            // 复制按钮
+            let copyContent = '';
+            if (!isExpired && !isBurned) {
+                if (s.type === 'file') {
+                    copyContent = 'https://share.vivi.homes/s/' + s.id;
+                } else {
+                    copyContent = s.content || ('https://share.vivi.homes/s/' + s.id);
+                }
+            }
+            const url = 'https://share.vivi.homes/s/' + s.id;
+            const dt = new Date(s.created_at * 1000);
+            const dateStr = `${dt.getMonth()+1}/${dt.getDate()} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+            // 已阅读时间
+            let viewedInfo = '';
+            if (s.first_viewed_at) {
+                const vd = new Date(s.first_viewed_at * 1000);
+                viewedInfo = `<span class="viewed-info">👁 已读于 ${vd.getMonth()+1}/${vd.getDate()} ${String(vd.getHours()).padStart(2,'0')}:${String(vd.getMinutes()).padStart(2,'0')}</span>`;
+            }
+            // 已焚时间
+            let burnedInfo = '';
+            if (s.burned_at) {
+                const bd = new Date(s.burned_at * 1000);
+                burnedInfo = `<span class="burned-info">🔥 焚于 ${bd.getMonth()+1}/${bd.getDate()} ${String(bd.getHours()).padStart(2,'0')}:${String(bd.getMinutes()).padStart(2,'0')}</span>`;
+            }
+            // 设备标签
+            const devTag = s.device && s.device !== 'unknown' ? `<span class="device-tag">${escapeHtml(deviceShort(s.device))}</span>` : '';
+            // 状态标签
+            let statusTag = '';
+            if (isBurned) {
+                statusTag = '<span class="burned-tag">🔥 已焚</span>';
+            } else if (isExpired) {
+                statusTag = '<span class="expired-tag">已过期</span>';
+            } else if (isBurnAfterRead) {
+                statusTag = `<span class="burned-tag" style="background: linear-gradient(135deg, rgba(255,165,0,0.3), rgba(255,200,0,0.3));">🔥 阅后即焚 · <span class="list-countdown" data-expires="${s.expires_at}">剩 ${formatTime(s.expires_at - now)}</span></span>`;
+            } else {
+                statusTag = `<span class="list-countdown" data-expires="${s.expires_at}">剩 ${formatTime(s.expires_at - now)}</span>`;
+            }
+            // 按钮逻辑：
+            //  - 普通 / URL active：📋 复制内容 + 🔗 直接打开（URL） + 👁 查看内容
+            //  - 阅后即焚：只有 👁 查看内容 🔥（不显示复制 / 跳转，防绕过）
+            //  - 已焚 / 过期：🔒 已失效
+            const isPendingBurnOnly = isBurnAfterRead;  // 阅后即焚未焚
+            const canCopy = !isExpired && !isBurned && !isPendingBurnOnly && s.type !== 'file';
+            const canView = !isExpired && !isBurned;
+            const copyBtn = canCopy ? `<button class="btn-copy" data-copy="${escapeHtml(copyContent)}" title="复制内容">📋 复制内容</button>` : '';
+            const isUrl = s.type === 'url' && !isExpired && !isBurned && !isPendingBurnOnly;
+            const jumpBtn = isUrl ? `<a class="btn-jump" href="${escapeHtml(s.content)}" target="_blank" rel="noopener" title="直接打开网址">🔗 直接打开</a>` : '';
+            const goBtn = canView ? `<button class="btn-go" data-go="${url}" title="查看${isBurnAfterRead ? '（阅后即焚）' : ''}">👁 查看内容${isBurnAfterRead ? ' 🔥' : ''}</button>` : `<button class="btn-disabled" disabled title="已失效">🔒 已失效</button>`;
+            // 预览样式
+            const previewClass = isFullMask ? 'masked' : (isPartial ? 'partial-shown' : '');
+            const previewSpan = previewClass ? `<span class="${previewClass}">${escapeHtml(preview)}</span>` : escapeHtml(preview);
+            return `
+                <div class="list-item ${isExpired || isBurned ? 'locked' : ''} ${isExpired ? 'expired' : ''} ${isBurned ? 'burned' : ''} ${isBurnAfterRead ? 'pending-burn' : ''}" style="animation-delay: ${i * 0.05}s">
+                    <div class="list-item-info">
+                        <div class="list-item-title">${icon} ${previewSpan} ${devTag}</div>
+                        <div class="list-item-meta">
+                            <span>📅 发布于 ${dateStr}</span>
+                            ${statusTag}
+                        </div>
+                        ${(viewedInfo || burnedInfo) ? `<div class="list-item-submeta">${viewedInfo}${burnedInfo}</div>` : ''}
+                    </div>
+                    <div class="list-item-actions">
+                        ${copyBtn}
+                        ${jumpBtn}
+                        ${goBtn}
+                    </div>
+                </div>
+            `;
+        }).join('');
+        container.innerHTML = html;
+        // 绑定复制按钮
+        container.querySelectorAll('.btn-copy').forEach(btn => {
+            btn.onclick = () => copyToClipboard(btn.getAttribute('data-copy'));
+        });
+        // 绑定查看按钮（本页面跳转，不打开新窗口）
+        container.querySelectorAll('.btn-go').forEach(btn => {
+            btn.onclick = () => {
+                const url = btn.getAttribute('data-go');
+                if (url) window.location.href = url;
+            };
+        });
+        // 更新浮窗 badge
+        updateFabCount(data.length);
+    } catch (e) {
+        const container = document.getElementById('shares-list');
+        if (container) {
+            container.innerHTML = '<p style="color:#ff8080; text-align:center; padding:20px; font-size:0.9em;">加载失败: ' + escapeHtml(e.message) + '</p>';
+        }
+        console.error('loadShares error:', e);
+    }
+}
+
+function updateFabCount(n) {
+    const el = document.getElementById('fab-count');
+    if (el) el.textContent = n;
+}
+
+// === Stats - 底部存储条 ===
+async function loadStats() {
+    try {
+        const resp = await fetch('/api/stats');
+        const data = await resp.json();
+        const usedMB = data.storage_used_mb || 0;
+        const limitMB = 5 * 1024;
+        const percent = Math.min(100, (usedMB / limitMB) * 100);
+        const usedEl = document.getElementById('storage-used');
+        const percentEl = document.getElementById('storage-percent');
+        const fillEl = document.getElementById('storage-fill');
+        if (usedEl) usedEl.textContent = usedMB.toFixed(1) + ' MB';
+        if (percentEl) percentEl.textContent = percent.toFixed(2) + '%';
+        if (fillEl) fillEl.style.width = percent + '%';
+        if (data.storage_used >= data.storage_limit) {
+            document.querySelectorAll('.btn').forEach(b => b.disabled = true);
+            toast('存储已满', 'error');
+        }
+    } catch (e) {
+        console.error('loadStats error:', e);
+    }
+}
+
+// === 启动 ===
+loadShares();
+loadStats();
+loadVersion();
+
+// 关闭侧边栏 X 已移除
+
+// 加载版本信息
+async function loadVersion() {
+    try {
+        const resp = await fetch('/api/version');
+        const data = await resp.json();
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        set('app-version', data.version);
+        set('app-released', data.released);
+        set('app-changelog', data.changelog);
+        set('app-name', data.name);
+    } catch (e) {}
+}
+
+setInterval(() => {
+    updateCountdowns();
+    loadShares();
+    loadStats();
+}, 5000);  // 5秒刷新（剩 10 分钟内的秒数会动态）
+
+// === 页面返回/恢复时立即刷新 ===
+// 场景：用户点开阅后即焚分享页 → 返回 → 这里要立即重新拉 list
+window.addEventListener('pageshow', (event) => {
+    // 浏览器 back/forward 缓存恢复时
+    if (event.persisted) {
+        loadShares();
+        loadStats();
+    } else {
+        loadShares();
+        loadStats();
+    }
+});
+// 页面从隐藏变可见时（用户切回标签页）
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        loadShares();
+        loadStats();
+    }
+});
+// 浏览器返回（popstate）也触发
+window.addEventListener('popstate', () => {
+    loadShares();
+    loadStats();
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#00d4ff">
+<meta name="description" content="V Share - 无任何隐私的人人可用的多设备内容便捷分享器">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+<link rel="manifest" href="/static/site.webmanifest">
+
+<title>V Share - 无任何隐私的人人可用的多设备内容便捷分享器</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+    --primary: #00d4ff;
+    --secondary: #ff00ea;
+    --accent: #00ff88;
+    --bg: #050514;
+    --surface: rgba(20, 20, 50, 0.6);
+    --text: #e0e0ff;
+    --border: rgba(0, 212, 255, 0.3);
+}
+html, body {
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+}
+body {
+    background:
+        radial-gradient(ellipse at 20% 30%, rgba(0, 212, 255, 0.15), transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(255, 0, 234, 0.15), transparent 50%),
+        var(--bg);
+    background-attachment: fixed;
+}
+
+/* === 背景动效 === */
+.grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(0, 212, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 255, 0.08) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: gridMove 15s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+@keyframes gridMove {
+    0% { background-position: 0 0; }
+    100% { background-position: 50px 50px; }
+}
+.particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+.particle {
+    position: absolute;
+    background: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--primary), 0 0 15px var(--primary);
+    animation: floatUp linear infinite;
+    opacity: 0.6;
+}
+.particle:nth-child(3n) {
+    background: var(--secondary);
+    box-shadow: 0 0 8px var(--secondary), 0 0 15px var(--secondary);
+    animation-duration: 12s;
+}
+.particle:nth-child(5n) {
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent), 0 0 15px var(--accent);
+    animation-duration: 9s;
+}
+@keyframes floatUp {
+    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.8; }
+    100% { transform: translateY(-10vh) translateX(50px); opacity: 0; }
+}
+.scan-line {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    box-shadow: 0 0 10px var(--primary);
+    z-index: 5;
+    animation: scanMove 4s linear infinite;
+    pointer-events: none;
+}
+@keyframes scanMove {
+    0% { top: 0; opacity: 0; }
+    5% { opacity: 1; }
+    95% { opacity: 1; }
+    100% { top: 100vh; opacity: 0; }
+}
+
+.container {
+    position: relative;
+    z-index: 10;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    position: relative;
+}
+.logo {
+    font-size: 1.6em;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    flex: 1;
+    text-align: center;
+    animation: logoGradient 6s ease infinite;
+    letter-spacing: 2px;
+}
+@keyframes logoGradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: rgba(20, 20, 50, 0.6);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: all 0.3s;
+    cursor: pointer;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.back-btn:hover {
+    border-color: var(--primary);
+    background: rgba(0, 212, 255, 0.1);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 32px;
+    backdrop-filter: blur(20px);
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    animation: cardSlideIn 0.5s ease-out backwards;
+}
+@keyframes cardSlideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.card::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    background: linear-gradient(45deg, transparent, var(--primary), transparent, var(--secondary), transparent);
+    background-size: 400% 400%;
+    border-radius: 18px;
+    z-index: -1;
+    opacity: 0;
+    animation: borderGlow 8s linear infinite;
+    transition: opacity 0.3s;
+}
+.card:hover::before { opacity: 0.5; }
+@keyframes borderGlow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+.card h2 {
+    color: var(--primary);
+    margin-bottom: 16px;
+    font-size: 1.2em;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+.content-box {
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: 'SF Mono', Monaco, monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 400px;
+    overflow-y: auto;
+    line-height: 1.5;
+}
+.content-box.url a {
+    color: var(--accent);
+    word-break: break-all;
+}
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+}
+.file-icon-large { font-size: 3em; }
+.btn {
+    display: inline-block;
+    padding: 10px 24px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+.btn::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -100%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4); }
+.btn:hover::after { left: 100%; }
+.btn-go {
+    background: linear-gradient(135deg, var(--accent), #00cc6e);
+    color: black;
+    font-weight: 700;
+    padding: 12px 28px;
+    text-align: center;
+}
+.btn-go:hover { box-shadow: 0 5px 25px rgba(0, 255, 136, 0.5); }
+.btn-copy {
+    background: var(--accent);
+    color: black;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 700;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+.btn-copy::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -100%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    transition: left 0.5s;
+}
+.btn-copy:hover { box-shadow: 0 0 15px rgba(0, 255, 136, 0.5); }
+.btn-copy:hover::after { left: 100%; }
+.action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+.action-row .btn { flex: 1; min-width: 120px; text-align: center; }
+/* 信息卡片（在内容上面） */
+.info-card {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(255, 0, 234, 0.05));
+    border: 1px solid var(--primary);
+    position: relative;
+}
+.info-card h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+.info-item {
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+.info-label {
+    font-size: 0.75em;
+    color: var(--primary);
+    opacity: 0.7;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.info-value {
+    font-size: 0.95em;
+    font-weight: 600;
+    color: var(--text);
+}
+.device-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(0, 212, 255, 0.15);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 0.85em;
+    color: var(--primary);
+    font-weight: 600;
+}
+.burned-tag {
+    display: inline-block;
+    padding: 2px 10px;
+    background: linear-gradient(135deg, rgba(255, 100, 0, 0.3), rgba(255, 0, 0, 0.3));
+    border: 1px solid #ff6400;
+    border-radius: 12px;
+    color: #ff8800;
+    font-size: 0.85em;
+    font-weight: 700;
+    animation: firePulse 1.2s ease-in-out infinite;
+}
+@keyframes firePulse {
+    0%, 100% { box-shadow: 0 0 5px rgba(255, 100, 0, 0.4); }
+    50% { box-shadow: 0 0 15px rgba(255, 100, 0, 0.8); }
+}
+.qr-wrapper {
+    text-align: center;
+    margin: 16px 0;
+    position: relative;
+    display: inline-block;
+}
+.qr-wrapper canvas, .qr-wrapper img {
+    display: block;
+    margin: 0 auto;
+    border-radius: 8px;
+    max-width: 240px;
+    height: auto;
+}
+.qr-label {
+    margin-top: 12px;
+    font-size: 0.85em;
+    opacity: 0.6;
+    word-break: break-all;
+    max-width: 280px;
+}
+.qr-mask {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85) 10px, rgba(80, 0, 0, 0.85) 10px, rgba(80, 0, 0, 0.85) 20px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ff8080;
+    font-weight: 900;
+    font-size: 1.1em;
+    border-radius: 8px;
+    text-align: center;
+    padding: 10px;
+    line-height: 1.3;
+}
+.qr-mask .icon { font-size: 2.5em; margin-bottom: 8px; }
+.qr-mask .sub { font-size: 0.7em; opacity: 0.8; margin-top: 6px; font-weight: 400; }
+.expired-banner {
+    padding: 20px;
+    background: rgba(255, 50, 50, 0.1);
+    border: 2px solid #ff3232;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #ff8080;
+    animation: warningPulse 2s ease-in-out infinite;
+}
+@keyframes warningPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(255, 50, 50, 0.3); }
+    50% { box-shadow: 0 0 20px rgba(255, 50, 50, 0.6); }
+}
+.masked {
+    color: #ff8080;
+    background: rgba(255, 50, 50, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', monospace;
+}
+.fab-share {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    text-decoration: none;
+    border-radius: 30px;
+    font-weight: 600;
+    box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+    z-index: 100;
+    animation: fabBounce 2s ease-in-out infinite;
+}
+@keyframes fabBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+/* 版本条 */
+.version-bar {
+    text-align: center;
+    padding: 20px 20px 12px;
+    margin-top: 20px;
+    color: var(--text);
+    opacity: 0.7;
+    font-family: 'SF Mono', Monaco, monospace;
+    line-height: 1.6;
+    position: relative;
+}
+.version-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+}
+.version-line-main {
+    font-size: 0.85em;
+    animation: versionGlow 4s ease-in-out infinite;
+}
+.version-line-sub {
+    font-size: 0.7em;
+    opacity: 0.7;
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+}
+.version-line-future {
+    font-size: 0.72em;
+    font-style: italic;
+    margin-top: 8px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% 200%;
+    animation: futureGradient 8s linear infinite;
+    letter-spacing: 1px;
+}
+@keyframes futureGradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+@keyframes versionGlow {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+}
+.version-bar strong {
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+@media (max-width: 768px) {
+    .container { padding: 16px; }
+    .card { padding: 20px; }
+    .action-row { flex-direction: column; }
+    .action-row .btn { width: 100%; }
+    .header .logo { font-size: 1.3em; }
+    .back-btn { font-size: 0.8em; padding: 6px 12px; }
+    .info-grid { grid-template-columns: 1fr; }
+}
+/* === 阅后即焚警告页 === */
+.warning-card {
+    background: linear-gradient(135deg, rgba(255, 100, 0, 0.15), rgba(255, 0, 0, 0.05));
+    border: 2px solid #ff6400;
+    text-align: center;
+    padding: 48px 32px;
+    position: relative;
+    overflow: hidden;
+    animation: warningGlow 2s ease-in-out infinite;
+}
+@keyframes warningGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(255, 100, 0, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(255, 100, 0, 0.6); }
+}
+.warning-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent, rgba(255, 100, 0, 0.3), transparent 30%);
+    animation: rotateBorder 3s linear infinite;
+    opacity: 0.3;
+}
+@keyframes rotateBorder {
+    100% { transform: rotate(360deg); }
+}
+.warning-icon {
+    font-size: 5em;
+    margin-bottom: 20px;
+    z-index: 1;
+    position: relative;
+    animation: fireIcon 1s ease-in-out infinite;
+}
+@keyframes fireIcon {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+.warning-title {
+    color: #ff8800;
+    font-size: 1.6em;
+    font-weight: 900;
+    margin-bottom: 12px;
+    z-index: 1;
+    position: relative;
+}
+.warning-text {
+    color: var(--text);
+    opacity: 0.85;
+    margin-bottom: 24px;
+    line-height: 1.6;
+    z-index: 1;
+    position: relative;
+}
+.warning-text strong {
+    color: #ff8800;
+    font-weight: 700;
+}
+.warning-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    z-index: 1;
+    position: relative;
+}
+.btn-warning {
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #ff6400, #ff0000);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(255, 100, 0, 0.4);
+}
+.btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(255, 100, 0, 0.6);
+}
+.btn-warning:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.btn-back {
+    padding: 14px 28px;
+    background: rgba(80, 80, 80, 0.3);
+    color: var(--text);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+.btn-back:hover {
+    background: rgba(80, 80, 80, 0.5);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+.warning-countdown {
+    color: #ff8800;
+    font-size: 2.5em;
+    font-weight: 900;
+    margin: 16px 0;
+    z-index: 1;
+    position: relative;
+    font-family: 'SF Mono', monospace;
+    text-shadow: 0 0 20px rgba(255, 100, 0, 0.5);
+}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="particles" id="particles"></div>
+<div class="scan-line"></div>
+
+<div class="container">
+    <div class="header">
+        <a href="/" class="back-btn">← 返回主页</a>
+        <div class="logo">V SHARE</div>
+        <div style="width: 110px;"></div>
+    </div>
+    <div id="content">
+        <div class="card" style="text-align: center;">
+            <p style="opacity: 0.6;">加载中...</p>
+        </div>
+    </div>
+    <div class="version-bar">
+        <div class="version-line-main">
+            🚀 <strong id="app-name">V Share</strong>
+            v<span id="app-version">2.9.2</span>
+            · 发布于 <span id="app-released">2026-06-30</span>
+        </div>
+        <div class="version-line-sub">
+            <span id="app-changelog">NEON DROP · ZERO TRACE · ONE TAP SHARE</span>
+        </div>
+        <div class="version-line-future">
+            「 链接来过，痕迹不必留下 」
+        </div>
+    </div>
+</div>
+
+<a href="/" class="fab-share">+ 分享新内容</a>
+
+<script>
+const shareId = location.pathname.split('/').pop();
+const shareUrl = location.href;
+
+// 设备检测
+let currentDevice = 'unknown';
+function detectDevice() {
+    const w = window.innerWidth;
+    if (w < 600) currentDevice = '手机';
+    else if (w < 1024) currentDevice = '平板';
+    else currentDevice = 'PC';
+}
+window.addEventListener('resize', detectDevice);
+detectDevice();
+
+function deviceShort(d) {
+    if (d === '手机') return '📱手机';
+    if (d === '平板') return '📱平板';
+    if (d === 'PC') return '💻PC';
+    return '❓';
+}
+
+// 粒子
+(function() {
+    const p = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+        const d = document.createElement('div');
+        d.className = 'particle';
+        d.style.left = Math.random() * 100 + '%';
+        d.style.width = d.style.height = (Math.random() * 4 + 2) + 'px';
+        d.style.animationDelay = Math.random() * 15 + 's';
+        d.style.animationDuration = (Math.random() * 8 + 8) + 's';
+        p.appendChild(d);
+    }
+})();
+
+function escapeHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+}
+function escapeJs(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+}
+function formatTime(ts) {
+    return new Date(ts * 1000).toLocaleString('zh-CN');
+}
+function formatRemain(s) {
+    if (s < 0) s = 0;
+    if (s < 60) return s + ' 秒';
+    if (s < 600) {
+        // 剩 10 分钟内显示秒
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return m + ' 分 ' + sec + ' 秒';
+    }
+    if (s < 3600) return Math.floor(s / 60) + ' 分钟';
+    if (s < 86400) {
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        return h + ' 时 ' + m + ' 分';
+    }
+    return Math.floor(s / 86400) + ' 天';
+}
+function copyToClipboard(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(
+            () => showToast('✓ 已复制'),
+            () => fallbackCopy(text)
+        );
+    } else fallbackCopy(text);
+}
+function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); showToast('✓ 已复制'); } catch(e) { showToast('复制失败', true); }
+    document.body.removeChild(ta);
+}
+function showToast(msg, isError) {
+    let t = document.getElementById('toast');
+    if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast';
+        t.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);padding:14px 24px;background:rgba(20,20,50,0.95);border:1px solid #00d4ff;border-radius:10px;color:#e0e0ff;z-index:1000;opacity:0;transition:all 0.3s;';
+        document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.borderColor = isError ? '#ff3232' : '#00d4ff';
+    t.style.transform = 'translateX(-50%) translateY(0)';
+    t.style.opacity = '1';
+    setTimeout(() => { t.style.transform = 'translateX(-50%) translateY(100px)'; t.style.opacity = '0'; }, 2000);
+}
+
+// 加载版本
+async function loadVersion() {
+    try {
+        const resp = await fetch('/api/version');
+        const data = await resp.json();
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        set('app-version', data.version);
+        set('app-released', data.released);
+        set('app-changelog', data.changelog);
+        set('app-name', data.name);
+    } catch (e) {}
+}
+loadVersion();
+
+// 阶段 1: 预览（不焚毁，检查状态 + 阅后即焚警告）
+async function loadPreview() {
+    try {
+        const resp = await fetch('/api/share/' + shareId + '?preview=1');
+        const data = await resp.json();
+        const el = document.getElementById('content');
+        if (data.error === 'not_found') {
+            el.innerHTML = '<div class="card" style="text-align:center;"><h2 style="color:#ff8080">❌ 分享不存在或已彻底删除</h2><p style="opacity:0.6; margin-top:12px;">分享可能在 30 天前已经过期并删除</p></div>';
+            return;
+        }
+
+        // 阅后即焚 + active + 未焚 → 显示警告页
+        if (data.burn_after_read && data.status === 'active') {
+            showBurnWarning(data, el);
+            return;
+        }
+        // 不是阅后即焚 → 直接加载
+        loadFull(false);
+    } catch (e) {
+        document.getElementById('content').innerHTML = '<div class="card" style="text-align:center; color:#ff8080;">网络错误: ' + e.message + '</div>';
+    }
+}
+
+// 阶段 2: 完整加载（真正 fetch，会触发焚毁）
+async function loadFull(confirmedBurn) {
+    try {
+        const resp = await fetch('/api/share/' + shareId);
+        const data = await resp.json();
+        renderContent(data);
+    } catch (e) {
+        document.getElementById('content').innerHTML = '<div class="card" style="text-align:center; color:#ff8080;">网络错误: ' + e.message + '</div>';
+    }
+}
+
+// 显示阅后即焚警告页
+function showBurnWarning(data, el) {
+    const remain = data.expires_at - Math.floor(Date.now() / 1000);
+    const remainStr = formatRemain(remain);
+    el.innerHTML = `
+        <div class="card warning-card">
+            <div class="warning-icon">🔥</div>
+            <div class="warning-title">阅后即焚</div>
+            <div class="warning-text">
+                这是一条<strong>阅后即焚</strong>消息<br>
+                你<strong>阅读后内容将立即消失</strong>，无法恢复<br>
+                请确认你已准备好接收内容
+            </div>
+            <div class="warning-countdown" id="burn-countdown">5</div>
+            <div class="warning-text" style="font-size: 0.85em; opacity: 0.6;">
+                ${remain > 0 ? `此消息将在 ${remainStr} 后过期删除` : '此消息已过期'}
+            </div>
+            <div class="warning-actions">
+                <button class="btn-warning" id="confirm-burn-btn">🔥 我已知晓，立即查看</button>
+                <a href="/" class="btn-back">← 返回主页</a>
+            </div>
+        </div>
+    `;
+    // 5 秒倒计时（不能跳过）
+    let countdown = 5;
+    const btn = document.getElementById('confirm-burn-btn');
+    const cdEl = document.getElementById('burn-countdown');
+    btn.disabled = true;
+    const cdInterval = setInterval(() => {
+        countdown--;
+        cdEl.textContent = countdown;
+        if (countdown <= 0) {
+            clearInterval(cdInterval);
+            cdEl.textContent = '✓';
+            btn.disabled = false;
+            btn.textContent = '🔥 立即查看内容';
+        }
+    }, 1000);
+    btn.onclick = () => {
+        clearInterval(cdInterval);
+        loadFull(true);
+    };
+}
+
+// 渲染完整内容
+function renderContent(data) {
+    try {
+    const el = document.getElementById('content');
+        if (data.error === 'not_found') {
+            el.innerHTML = '<div class="card" style="text-align:center;"><h2 style="color:#ff8080">❌ 分享不存在或已彻底删除</h2><p style="opacity:0.6; margin-top:12px;">分享可能在 30 天前已经过期并删除</p></div>';
+            return;
+        }
+
+        const isBurned = data.status === 'burned';
+        const isExpired = data.expired || isBurned;
+
+        // 设备标签
+        const devTag = data.device && data.device !== 'unknown' ? `<span class="device-tag">${escapeHtml(deviceShort(data.device))}</span>` : '';
+        // 状态标签
+        let statusTag = '';
+        if (isBurned) statusTag = '<span class="burned-tag">🔥 已焚</span>';
+        else if (data.expired) statusTag = '<span class="expired-tag" style="color:#ff8080;">⏰ 已过期</span>';
+        else statusTag = '<span style="color: var(--accent);">✓ 有效</span>';
+
+        // 创建时间
+        const dt = new Date(data.created_at * 1000);
+        const dateStr = `${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+
+        // === 信息卡片（放最上面） ===
+        let html = '';
+        if (isBurned) {
+            html += `<div class="expired-banner" style="border-color: #ff6400; background: rgba(255, 100, 0, 0.1); color: #ff8800;">
+                <h2>🔥 此分享已焚毁</h2>
+                <p style="margin-top:8px;">阅后即焚 - 第一个查看的人阅读后即焚毁</p>
+            </div>`;
+        } else if (data.expired) {
+            html += `<div class="expired-banner">
+                <h2>⏰ 此分享已过期</h2>
+                <p style="margin-top:8px;">内容已打码保留 30 天后彻底删除</p>
+            </div>`;
+        }
+
+        html += `<div class="card info-card">
+            <h2>ℹ️ 分享信息 ${statusTag}</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">📱 发布于</div>
+                    <div class="info-value">${devTag || '<span style="opacity:0.5;">未知</span>'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">📅 创建时间</div>
+                    <div class="info-value">${dateStr}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">📂 分享类型</div>
+                    <div class="info-value">${data.type === 'url' ? '🔗 网址' : data.type === 'file' ? '📎 文件' : '📝 文本'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">${isBurned ? '🔥 焚毁时间' : (data.expired ? '⏰ 过期时间' : '⏱ 剩余时间')}</div>
+                    <div class="info-value" id="remain-time">${isBurned ? formatTime(data.burned_at) : (data.expired ? formatTime(data.expires_at) : formatRemain(data.expires_at - Math.floor(Date.now() / 1000)))}</div>
+                </div>
+            </div>
+        </div>`;
+
+        // === 过期/已焚后：只显示打码内容 ===
+        if (data.expired || isBurned) {
+            if (data.type === 'file') {
+                html += `<div class="card">
+                    <h2>📎 文件 (已删除)</h2>
+                    <div class="content-box"><span class="masked">文件已被删除</span></div>
+                </div>`;
+            } else {
+                html += `<div class="card">
+                    <h2>${data.type === 'url' ? '🔗 网址' : '📝 文本'} (已打码)</h2>
+                    <div class="content-box"><span class="masked">${escapeHtml(data.content || '')}</span></div>
+                </div>`;
+            }
+            el.innerHTML = html;
+            return;
+        }
+
+        // === 有效：显示内容 + 二维码 + 链接 ===
+        let qrContent = '';
+        let qrLabel = '';
+        if (data.type === 'url') {
+            qrContent = data.content;
+            qrLabel = data.content;
+        } else if (data.type === 'text') {
+            qrContent = data.content.length < 200 ? data.content : shareUrl;
+            qrLabel = data.content.length < 200 ? '文本内容' : '分享链接';
+        } else {
+            qrContent = shareUrl;
+            qrLabel = '文件分享链接';
+        }
+
+        if (data.type === 'url') {
+            html += `<div class="card">
+                <h2>🔗 网址</h2>
+                <div class="content-box url"><a href="${escapeHtml(data.content)}" target="_blank" rel="noopener">${escapeHtml(data.content)}</a></div>
+                <div class="action-row">
+                    <a href="${escapeHtml(data.content)}" target="_blank" rel="noopener" class="btn btn-go">🚀 跳转打开</a>
+                    <button class="btn-copy" data-copy="${escapeJs(data.content)}">📋 复制网址</button>
+                </div>
+            </div>`;
+        } else if (data.type === 'text') {
+            html += `<div class="card">
+                <h2>📝 文本</h2>
+                <div class="content-box">${escapeHtml(data.content)}</div>
+                <div class="action-row">
+                    <button class="btn-copy" data-copy="${escapeJs(data.content)}">📋 复制文本</button>
+                </div>
+            </div>`;
+        } else if (data.type === 'file') {
+            const size = data.file_size ? (data.file_size / 1024 / 1024).toFixed(2) + ' MB' : '';
+            const fileUrl = '/uploads/' + encodeURIComponent(data.file_path);
+            html += `<div class="card">
+                <h2>📎 文件</h2>
+                <div class="file-info">
+                    <div class="file-icon-large">📄</div>
+                    <div style="flex:1; min-width: 0;">
+                        <div style="font-weight:600; word-break: break-all;">${escapeHtml(data.file_name)}</div>
+                        <div style="font-size:0.85em; opacity:0.6;">${size} · ${escapeHtml(data.mime_type || '')}</div>
+                    </div>
+                </div>
+                <div class="action-row">
+                    <a href="${fileUrl}" class="btn btn-go" target="_blank" download>⬇️ 下载文件</a>
+                </div>
+            </div>`;
+        }
+
+        html += `<div class="card">
+            <h2>📱 扫码查看${data.type === 'url' ? '网址' : data.type === 'file' ? '文件' : '文本'}</h2>
+            <div class="qr-wrapper" id="qrcode-area">
+                <div id="qr-canvas"></div>
+            </div>
+            <div class="qr-label">${escapeHtml(qrLabel.length > 50 ? qrLabel.slice(0, 50) + '...' : qrLabel)}</div>
+        </div>`;
+
+        html += `<div class="card">
+            <h2>🔗 分享本页链接</h2>
+            <div class="content-box" style="word-break: break-all; font-size: 0.9em; opacity: 0.8;">${escapeHtml(shareUrl)}</div>
+            <div class="action-row">
+                <button class="btn-copy" data-copy="${escapeJs(shareUrl)}">📋 复制本页面链接</button>
+            </div>
+        </div>`;
+
+        el.innerHTML = html;
+
+        // 绑定复制按钮
+        el.querySelectorAll('.btn-copy').forEach(btn => {
+            btn.onclick = () => copyToClipboard(btn.getAttribute('data-copy'));
+        });
+
+        // 生成二维码
+        try {
+            new QRCode(document.getElementById('qr-canvas'), {
+                text: qrContent,
+                width: 220,
+                height: 220,
+                colorDark: '#000',
+                colorLight: '#fff'
+            });
+        } catch (e) {
+            document.getElementById('qr-canvas').innerHTML = '<p style="color:#ff8080;">二维码生成失败</p>';
+        }
+
+        // 实时倒计时
+        const remainEl = document.getElementById('remain-time');
+        const qrWrapper = document.getElementById('qrcode-area');
+        if (remainEl && !data.expired) {
+            const remainInterval = setInterval(() => {
+                const newRemain = data.expires_at - Math.floor(Date.now() / 1000);
+                if (newRemain <= 0) {
+                    clearInterval(remainInterval);
+                    if (qrWrapper && !document.getElementById('qr-mask')) {
+                        const mask = document.createElement('div');
+                        mask.id = 'qr-mask';
+                        mask.className = 'qr-mask';
+                        mask.innerHTML = '<div class="icon">🚫</div><div>已过期</div><div class="sub">二维码已失效</div>';
+                        qrWrapper.appendChild(mask);
+                    }
+                    remainEl.textContent = '已过期';
+                    remainEl.style.color = '#ff8080';
+                } else {
+                    remainEl.textContent = formatRemain(newRemain);
+                }
+            }, 1000);
+        }
+    } catch (e) {
+        document.getElementById('content').innerHTML = '<div class="card" style="text-align:center; color:#ff8080;">网络错误: ' + e.message + '</div>';
+    }
+}
+
+loadPreview();
+</script>
+
+</body>
+</html>
