@@ -8,13 +8,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<!-- Favicon 全平台 -->
+<!-- Favicon (v3.0.0: 单一 SVG, 多尺寸自适应) -->
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
 <link rel="manifest" href="/static/site.webmanifest">
+
+<!-- i18n engine (v3.0.0: 必须早于 DOMContentLoaded 加载) -->
+<script src="/static/i18n.js"></script>
 
 <title>V Share - 无任何隐私的人人可用的多设备内容便捷分享器</title>
 <style>
@@ -131,6 +130,42 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+}
+/* v3.0.0: 语言切换器 */
+.lang-switcher-wrap {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+.lang-switcher {
+    width: auto !important;
+    padding: 6px 14px !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    color: var(--text) !important;
+    font-size: 0.8em !important;
+    font-family: inherit !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%2300d4ff' d='M5 6L0 0h10z'/></svg>") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    padding-right: 28px !important;
+    transition: all 0.3s !important;
+}
+.lang-switcher:hover {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3) !important;
+}
+.lang-switcher:focus {
+    outline: none;
+    border-color: var(--primary) !important;
+}
+.lang-switcher option {
+    background: #0a0a20;
+    color: var(--text);
 }
 .logo {
     text-align: center;
@@ -1069,102 +1104,114 @@ select {
 <div class="layout">
 <!-- 左侧主区 -->
 <div class="main-col">
+    <!-- v3.0.0: 语言切换器 -->
+    <div class="lang-switcher-wrap">
+        <select id="lang-switcher" class="lang-switcher" aria-label="Language">
+            <option value="en">🌐 English</option>
+            <option value="zh-CN">🌐 简体中文</option>
+            <option value="zh-TW">🌐 繁體中文</option>
+            <option value="ja">🌐 日本語</option>
+            <option value="ko">🌐 한국어</option>
+            <option value="es">🌐 Español</option>
+            <option value="fr">🌐 Français</option>
+        </select>
+    </div>
     <div class="logo">V SHARE</div>
-    <div class="subtitle" id="subtitle-zh">
+    <div class="subtitle" id="subtitle-zh" data-i18n="site.subtitle">
         无任何隐私的人人可用的多设备内容便捷分享器
     </div>
     <div class="subtitle-en" id="subtitle-en">
-        NEON DROP · ZERO TRACE · ONE TAP SHARE
-        <span class="device-badge" id="device-badge">📱 加载中</span>
+        <span data-i18n="site.tagline">NEON DROP · ZERO TRACE · ONE TAP SHARE</span>
+        <span class="device-badge" id="device-badge">📱 <span data-i18n="sidebar.loading">加载中</span></span>
     </div>
 
     <div class="tabs">
-        <button class="tab active" data-tab="text">📝 文本</button>
-        <button class="tab" data-tab="url">🔗 网址</button>
-        <button class="tab" data-tab="file">📎 文件</button>
+        <button class="tab active" data-tab="text" data-i18n="nav.tab.text">📝 文本</button>
+        <button class="tab" data-tab="url" data-i18n="nav.tab.url">🔗 网址</button>
+        <button class="tab" data-tab="file" data-i18n="nav.tab.file">📎 文件</button>
     </div>
 
     <div id="panel-text" class="card">
         <div class="field">
-            <label>分享内容</label>
-            <textarea id="text-input" placeholder="粘贴任何文本 / 笔记 / 代码片段..."></textarea>
+            <label data-i18n="text.label">分享内容</label>
+            <textarea id="text-input" data-i18n-placeholder="text.placeholder" placeholder="粘贴任何文本 / 笔记 / 代码片段..."></textarea>
         </div>
         <div class="field">
-            <label>过期时间</label>
+            <label data-i18n="expire.label">过期时间</label>
             <select id="text-expire">
-                <option value="10m">⏱ 10 分钟</option>
-                <option value="30m">⏱ 30 分钟</option>
-                <option value="1h">⏰ 1 小时</option>
-                <option value="24h">📅 24 小时</option>
-                <option value="48h">📅 48 小时</option>
-                <option value="72h" selected>🗓 72 小时 (默认)</option>
+                <option value="10m" data-i18n="expire.10m">⏱ 10 分钟</option>
+                <option value="30m" data-i18n="expire.30m">⏱ 30 分钟</option>
+                <option value="1h" data-i18n="expire.1h">⏰ 1 小时</option>
+                <option value="24h" data-i18n="expire.24h">📅 24 小时</option>
+                <option value="48h" data-i18n="expire.48h">📅 48 小时</option>
+                <option value="72h" selected data-i18n="expire.72h">🗓 72 小时 (默认)</option>
             </select>
         </div>
         <div class="field">
             <label class="burn-label">
                 <input type="checkbox" id="text-burn" class="burn-checkbox">
-                <span class="burn-text">🔥 阅后即焚</span>
-                <span class="burn-hint">第一个看到的人阅读后即焚毁（按原过期时间彻底删除）</span>
+                <span class="burn-text" data-i18n="burn.text">🔥 阅后即焚</span>
+                <span class="burn-hint" data-i18n="burn.hint">第一个看到的人阅读后即焚毁（按原过期时间彻底删除）</span>
             </label>
         </div>
-        <button class="btn btn-full" onclick="submitText()">⚡ 创建分享</button>
+        <button class="btn btn-full" onclick="submitText()" data-i18n="btn.create_text">⚡ 创建分享</button>
     </div>
 
     <div id="panel-url" class="card" style="display:none">
         <div class="field">
-            <label>网址</label>
-            <input type="text" id="url-input" placeholder="https://example.com">
+            <label data-i18n="url.label">网址</label>
+            <input type="text" id="url-input" data-i18n-placeholder="url.placeholder" placeholder="https://example.com">
         </div>
         <div class="field">
-            <label>过期时间</label>
+            <label data-i18n="expire.label">过期时间</label>
             <select id="url-expire">
-                <option value="10m">⏱ 10 分钟</option>
-                <option value="30m">⏱ 30 分钟</option>
-                <option value="1h">⏰ 1 小时</option>
-                <option value="24h">📅 24 小时</option>
-                <option value="48h">📅 48 小时</option>
-                <option value="72h" selected>🗓 72 小时 (默认)</option>
+                <option value="10m" data-i18n="expire.10m">⏱ 10 分钟</option>
+                <option value="30m" data-i18n="expire.30m">⏱ 30 分钟</option>
+                <option value="1h" data-i18n="expire.1h">⏰ 1 小时</option>
+                <option value="24h" data-i18n="expire.24h">📅 24 小时</option>
+                <option value="48h" data-i18n="expire.48h">📅 48 小时</option>
+                <option value="72h" selected data-i18n="expire.72h">🗓 72 小时 (默认)</option>
             </select>
         </div>
         <div class="field">
             <label class="burn-label">
                 <input type="checkbox" id="url-burn" class="burn-checkbox">
-                <span class="burn-text">🔥 阅后即焚</span>
-                <span class="burn-hint">第一个看到的人阅读后即焚毁</span>
+                <span class="burn-text" data-i18n="burn.text">🔥 阅后即焚</span>
+                <span class="burn-hint" data-i18n="burn.hint">第一个看到的人阅读后即焚毁</span>
             </label>
         </div>
-        <button class="btn btn-full" onclick="submitUrl()">🔗 分享网址</button>
+        <button class="btn btn-full" onclick="submitUrl()" data-i18n="btn.share_url">🔗 分享网址</button>
     </div>
 
     <div id="panel-file" class="card" style="display:none">
         <div class="field">
-            <label>选择文件 (最大 100 MB)</label>
+            <label data-i18n="file.label">选择文件 (最大 100 MB)</label>
             <div class="file-drop" id="file-drop">
                 <div class="file-icon">📁</div>
-                <div style="font-size: 1.05em;">点击选择 或 拖拽文件到这里</div>
+                <div style="font-size: 1.05em;" data-i18n="file.drop_hint">点击选择 或 拖拽文件到这里</div>
                 <input type="file" id="file-input" style="display:none">
             </div>
             <div class="file-info" id="file-info" style="display:none"></div>
         </div>
         <div class="field">
-            <label>过期时间</label>
+            <label data-i18n="expire.label">过期时间</label>
             <select id="file-expire">
-                <option value="10m">⏱ 10 分钟</option>
-                <option value="30m">⏱ 30 分钟</option>
-                <option value="1h">⏰ 1 小时</option>
-                <option value="24h">📅 24 小时</option>
-                <option value="48h">📅 48 小时</option>
-                <option value="72h" selected>🗓 72 小时 (默认)</option>
+                <option value="10m" data-i18n="expire.10m">⏱ 10 分钟</option>
+                <option value="30m" data-i18n="expire.30m">⏱ 30 分钟</option>
+                <option value="1h" data-i18n="expire.1h">⏰ 1 小时</option>
+                <option value="24h" data-i18n="expire.24h">📅 24 小时</option>
+                <option value="48h" data-i18n="expire.48h">📅 48 小时</option>
+                <option value="72h" selected data-i18n="expire.72h">🗓 72 小时 (默认)</option>
             </select>
         </div>
         <div class="field">
             <label class="burn-label">
                 <input type="checkbox" id="file-burn" class="burn-checkbox">
-                <span class="burn-text">🔥 阅后即焚</span>
-                <span class="burn-hint">第一个下载/查看的人阅读后即焚毁</span>
+                <span class="burn-text" data-i18n="burn.text">🔥 阅后即焚</span>
+                <span class="burn-hint" data-i18n="burn.hint_file">第一个下载/查看的人阅读后即焚毁</span>
             </label>
         </div>
-        <button class="btn btn-full" id="file-submit" onclick="submitFile()" disabled>📤 上传分享</button>
+        <button class="btn btn-full" id="file-submit" onclick="submitFile()" disabled data-i18n="btn.upload_file">📤 上传分享</button>
     </div>
 
     <div id="result-area"></div>
@@ -1173,22 +1220,22 @@ select {
 <!-- 右侧栏 - 最近分享 -->
 <div class="side-col" id="side-col">
     <div class="card">
-        <h2 class="card-title">
+        <h2 class="card-title" data-i18n="sidebar.title">
             📋 最近分享
         </h2>
-        <div id="shares-list" class="side-list">加载中...</div>
+        <div id="shares-list" class="side-list" data-i18n="sidebar.loading">加载中...</div>
     </div>
 </div>
 </div>
 
 <!-- 浮动跳转按钮 (仅移动端显示) -->
 <button class="fab-jump" id="fab-jump" onclick="jumpToList()">
-    <span class="fab-content">📋 跳到最近分享 <span class="badge" id="fab-count">0</span></span>
-    <span class="fab-close" id="fab-close" title="关闭">×</span>
+    <span class="fab-content"><span data-i18n="fab.jump_to_list">📋 跳到最近分享</span> <span class="badge" id="fab-count">0</span></span>
+    <span class="fab-close" id="fab-close" data-i18n-title="fab.close" title="关闭">×</span>
 </button>
 
 <!-- 浮动显示列表按钮 (侧栏被关后显示) -->
-<button class="fab-show-list" id="fab-show-list">
+<button class="fab-show-list" id="fab-show-list" data-i18n="fab.show_list">
     📋 显示列表
 </button>
 
@@ -1197,7 +1244,7 @@ select {
     <div class="storage-card">
         <div class="storage-icon">💾</div>
         <div class="storage-info">
-            <div class="storage-label">⚡ 存储空间 · 实时监控</div>
+            <div class="storage-label" data-i18n="storage.label">⚡ 存储空间 · 实时监控</div>
             <div class="storage-bar-wrap">
                 <div class="storage-track">
                     <div class="storage-fill" id="storage-fill" style="width: 0%"></div>
@@ -1212,13 +1259,13 @@ select {
     <div class="version-bar">
         <div class="version-line-main">
             🚀 <strong id="app-name">V Share</strong>
-            v<span id="app-version">2.9.2</span>
-            · 发布于 <span id="app-released">2026-06-30</span>
+            v<span id="app-version">3.0.0</span>
+            · <span data-i18n="version.released_prefix">Released</span> <span id="app-released">2026-07-05</span>
         </div>
         <div class="version-line-sub">
             <span id="app-changelog">NEON DROP · ZERO TRACE · ONE TAP SHARE</span>
         </div>
-        <div class="version-line-future">
+        <div class="version-line-future" data-i18n="site.footer_slogan">
             「 链接来过，痕迹不必留下 」
         </div>
     </div>
@@ -1313,7 +1360,7 @@ function toast(msg, type = 'info') {
 function copyToClipboard(text) {
     if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(
-            () => toast('✓ 已复制到剪贴板'),
+            () => toast(i18nT('toast.copied', '✓ 已复制到剪贴板')),
             () => fallbackCopy(text)
         );
     } else {
@@ -1327,8 +1374,8 @@ function fallbackCopy(text) {
     ta.style.opacity = '0';
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand('copy'); toast('✓ 已复制'); }
-    catch(e) { toast('复制失败', 'error'); }
+    try { document.execCommand('copy'); toast(i18nT('toast.copied', '✓ 已复制')); }
+    catch(e) { toast(i18nT('toast.copy_failed', '复制失败'), 'error'); }
     document.body.removeChild(ta);
 }
 
@@ -1383,15 +1430,15 @@ fileInput.onchange = e => { if (e.target.files[0]) handleFile(e.target.files[0])
 let currentFile = null;
 function handleFile(f) {
     if (f.size > 100 * 1024 * 1024) {
-        toast('文件超过 100 MB', 'error');
+        toast(i18nT('toast.file_too_big', '文件超过 100 MB'), 'error');
         return;
     }
     currentFile = f;
     fileInfo.style.display = '';
     fileInfo.innerHTML = `
         <strong>📎 ${escapeHtml(f.name)}</strong><br>
-        大小: ${(f.size / 1024 / 1024).toFixed(2)} MB<br>
-        类型: ${f.type || 'application/octet-stream'}
+        ${i18nT('file.size_label', '大小:')} ${(f.size / 1024 / 1024).toFixed(2)} MB<br>
+        ${i18nT('file.type_label', '类型:')} ${f.type || 'application/octet-stream'}
     `;
     fileSubmit.disabled = false;
 }
@@ -1399,11 +1446,11 @@ function handleFile(f) {
 // === 提交 ===
 async function submitText() {
     const text = document.getElementById('text-input').value.trim();
-    if (!text) { toast('请输入内容', 'error'); return; }
+    if (!text) { toast(i18nT('toast.empty_text', '请输入内容'), 'error'); return; }
     const expire = document.getElementById('text-expire').value;
     const burn = document.getElementById('text-burn').checked;
     if (burn) {
-        if (!confirm('⚠️ 阅后即焚确认\n\n第一个看到这条消息的人阅读后，消息将立即变为「已焚」状态。\n\n原过期时间后 30 天彻底删除。\n\n是否继续？')) return;
+        if (!confirm(i18nT('burn.confirm_body_text', '⚠️ 阅后即焚确认\n\n第一个看到这条消息的人阅读后，消息将立即变为「已焚」状态。\n\n原过期时间后 30 天彻底删除。\n\n是否继续？'))) return;
     }
     const fd = new FormData();
     fd.append('text', text);
@@ -1415,11 +1462,11 @@ async function submitText() {
 
 async function submitUrl() {
     let url = document.getElementById('url-input').value.trim();
-    if (!url) { toast('请输入网址', 'error'); return; }
+    if (!url) { toast(i18nT('toast.empty_url', '请输入网址'), 'error'); return; }
     // 自动补全 http://（网址表单：无协议就补，恢复豆要的自动补足）
     if (!url.match(/^[a-z][a-z0-9+.-]*:\/\//i)) {
         if (/\s/.test(url)) {
-            toast('网址不能包含空格', 'error');
+            toast(i18nT('toast.url_no_space', '网址不能包含空格'), 'error');
             return;
         }
         url = 'http://' + url;
@@ -1429,7 +1476,7 @@ async function submitUrl() {
     const expire = document.getElementById('url-expire').value;
     const burn = document.getElementById('url-burn').checked;
     if (burn) {
-        if (!confirm('⚠️ 阅后即焚确认\n\n第一个打开此网址的人阅读后，消息将立即变为「已焚」状态。\n\n原过期时间后 30 天彻底删除。\n\n是否继续？')) return;
+        if (!confirm(i18nT('burn.confirm_body_url', '⚠️ 阅后即焚确认\n\n第一个打开此网址的人阅读后，消息将立即变为「已焚」状态。\n\n原过期时间后 30 天彻底删除。\n\n是否继续？'))) return;
     }
     const fd = new FormData();
     fd.append('text', url);
@@ -1440,11 +1487,11 @@ async function submitUrl() {
 }
 
 async function submitFile() {
-    if (!currentFile) { toast('请选择文件', 'error'); return; }
+    if (!currentFile) { toast(i18nT('toast.empty_file', '请选择文件'), 'error'); return; }
     const expire = document.getElementById('file-expire').value;
     const burn = document.getElementById('file-burn').checked;
     if (burn) {
-        if (!confirm('⚠️ 阅后即焚确认\n\n第一个下载此文件的人阅读后，文件将立即变为「已焚」状态。\n\n原过期时间后 30 天彻底删除。\n\n是否继续？')) return;
+        if (!confirm(i18nT('burn.confirm_body_file', '⚠️ 阅后即焚确认\n\n第一个下载此文件的人阅读后，文件将立即变为「已焚」状态。\n\n原过期时间后 30 天彻底删除。\n\n是否继续？'))) return;
     }
     const fd = new FormData();
     fd.append('file', currentFile);
@@ -1459,13 +1506,13 @@ async function submitShare(fd) {
         const resp = await fetch('/api/share', { method: 'POST', body: fd });
         const data = await resp.json();
         if (!resp.ok) {
-            toast(data.message || '创建失败', 'error');
+            toast(data.message || i18nT('error.empty', '创建失败'), 'error');
             return;
         }
         showResult(data);
         loadShares();
         loadStats();
-        toast('✓ 创建成功，3 秒后清空表单...');
+        toast(i18nT('toast.created', '✓ 创建成功，3 秒后清空表单...'));
         // 3 秒后清空表单 + 滚动到结果 + 5 秒后清空
         setTimeout(() => {
             // 清空当前面板的输入
@@ -1486,10 +1533,10 @@ async function submitShare(fd) {
                     fileInput.value = '';
                 }
             }
-            toast('✓ 表单已清空');
+            toast(i18nT('result.cleared_toast', '✓ 表单已清空'));
         }, 3000);
     } catch (e) {
-        toast('网络错误: ' + e.message, 'error');
+        toast(i18nT('toast.network_error', '网络错误: ') + e.message, 'error');
     }
 }
 
@@ -1498,14 +1545,14 @@ function showResult(data) {
     const url = data.url;
     result.innerHTML = `
         <div class="card" style="border-color: var(--accent);">
-            <h3 style="color: var(--accent); margin-bottom: 12px;">✓ 分享已创建</h3>
+            <h3 style="color: var(--accent); margin-bottom: 12px;">${i18nT('result.title', '✓ 分享已创建')}</h3>
             <div class="share-link-box">
                 <input type="text" value="${escapeHtml(url)}" readonly id="link-${data.id}">
-                <button class="btn-copy" data-copy="${escapeHtml(url)}">复制</button>
+                <button class="btn-copy" data-copy="${escapeHtml(url)}">${i18nT('result.copy', '复制')}</button>
             </div>
             <div style="text-align: center; margin-top: 16px;">
                 <span class="countdown" id="cd-${data.id}" data-expires="${data.expires_at}">
-                    剩余: ${formatTime(data.expires_in)}
+                    ${i18nT('result.countdown_prefix', '剩余: ')}${formatTime(data.expires_in)}
                 </span>
             </div>
         </div>
@@ -1568,7 +1615,7 @@ async function loadShares() {
         if (!Array.isArray(data)) throw new Error('Invalid response');
         const container = document.getElementById('shares-list');
         if (data.length === 0) {
-            container.innerHTML = '<p style="opacity:0.5; text-align:center; padding:20px; font-size: 0.9em;">还没有分享</p>';
+            container.innerHTML = '<p style="opacity:0.5; text-align:center; padding:20px; font-size: 0.9em;">' + i18nT('sidebar.empty', '还没有分享') + '</p>';
             updateFabCount(0);
             return;
         }
@@ -1606,26 +1653,26 @@ async function loadShares() {
             let viewedInfo = '';
             if (s.first_viewed_at) {
                 const vd = new Date(s.first_viewed_at * 1000);
-                viewedInfo = `<span class="viewed-info">👁 已读于 ${vd.getMonth()+1}/${vd.getDate()} ${String(vd.getHours()).padStart(2,'0')}:${String(vd.getMinutes()).padStart(2,'0')}</span>`;
+                viewedInfo = `<span class="viewed-info">${i18nT('list.viewed_prefix', '👁 已读于 ')}${vd.getMonth()+1}/${vd.getDate()} ${String(vd.getHours()).padStart(2,'0')}:${String(vd.getMinutes()).padStart(2,'0')}</span>`;
             }
             // 已焚时间
             let burnedInfo = '';
             if (s.burned_at) {
                 const bd = new Date(s.burned_at * 1000);
-                burnedInfo = `<span class="burned-info">🔥 焚于 ${bd.getMonth()+1}/${bd.getDate()} ${String(bd.getHours()).padStart(2,'0')}:${String(bd.getMinutes()).padStart(2,'0')}</span>`;
+                burnedInfo = `<span class="burned-info">${i18nT('list.burned_prefix', '🔥 焚于 ')}${bd.getMonth()+1}/${bd.getDate()} ${String(bd.getHours()).padStart(2,'0')}:${String(bd.getMinutes()).padStart(2,'0')}</span>`;
             }
             // 设备标签
             const devTag = s.device && s.device !== 'unknown' ? `<span class="device-tag">${escapeHtml(deviceShort(s.device))}</span>` : '';
             // 状态标签
             let statusTag = '';
             if (isBurned) {
-                statusTag = '<span class="burned-tag">🔥 已焚</span>';
+                statusTag = '<span class="burned-tag">' + i18nT('list.status_burned', '🔥 已焚') + '</span>';
             } else if (isExpired) {
-                statusTag = '<span class="expired-tag">已过期</span>';
+                statusTag = '<span class="expired-tag">' + i18nT('list.status_expired', '已过期') + '</span>';
             } else if (isBurnAfterRead) {
-                statusTag = `<span class="burned-tag" style="background: linear-gradient(135deg, rgba(255,165,0,0.3), rgba(255,200,0,0.3));">🔥 阅后即焚 · <span class="list-countdown" data-expires="${s.expires_at}">剩 ${formatTime(s.expires_at - now)}</span></span>`;
+                statusTag = `<span class="burned-tag" style="background: linear-gradient(135deg, rgba(255,165,0,0.3), rgba(255,200,0,0.3));">${i18nT('list.burn_short', '🔥 阅后即焚 · ')}<span class="list-countdown" data-expires="${s.expires_at}">${i18nT('list.remain_short', '剩 ')}${formatTime(s.expires_at - now)}</span></span>`;
             } else {
-                statusTag = `<span class="list-countdown" data-expires="${s.expires_at}">剩 ${formatTime(s.expires_at - now)}</span>`;
+                statusTag = `<span class="list-countdown" data-expires="${s.expires_at}">${i18nT('list.remain_short', '剩 ')}${formatTime(s.expires_at - now)}</span>`;
             }
             // 按钮逻辑：
             //  - 普通 / URL active：📋 复制内容 + 🔗 直接打开（URL） + 👁 查看内容
@@ -1634,10 +1681,10 @@ async function loadShares() {
             const isPendingBurnOnly = isBurnAfterRead;  // 阅后即焚未焚
             const canCopy = !isExpired && !isBurned && !isPendingBurnOnly && s.type !== 'file';
             const canView = !isExpired && !isBurned;
-            const copyBtn = canCopy ? `<button class="btn-copy" data-copy="${escapeHtml(copyContent)}" title="复制内容">📋 复制内容</button>` : '';
+            const copyBtn = canCopy ? `<button class="btn-copy" data-copy="${escapeHtml(copyContent)}" title="${i18nT('list.copy_content', '📋 复制内容')}">${i18nT('list.copy_content', '📋 复制内容')}</button>` : '';
             const isUrl = s.type === 'url' && !isExpired && !isBurned && !isPendingBurnOnly;
-            const jumpBtn = isUrl ? `<a class="btn-jump" href="${escapeHtml(s.content)}" target="_blank" rel="noopener" title="直接打开网址">🔗 直接打开</a>` : '';
-            const goBtn = canView ? `<button class="btn-go" data-go="${url}" title="查看${isBurnAfterRead ? '（阅后即焚）' : ''}">👁 查看内容${isBurnAfterRead ? ' 🔥' : ''}</button>` : `<button class="btn-disabled" disabled title="已失效">🔒 已失效</button>`;
+            const jumpBtn = isUrl ? `<a class="btn-jump" href="${escapeHtml(s.content)}" target="_blank" rel="noopener" title="${i18nT('list.open_url', '🔗 直接打开')}">${i18nT('list.open_url', '🔗 直接打开')}</a>` : '';
+            const goBtn = canView ? `<button class="btn-go" data-go="${url}" title="${i18nT('list.view_content', '查看内容')}">${i18nT(isBurnAfterRead ? 'list.view_burn' : 'list.view_content', '👁 查看内容')}</button>` : `<button class="btn-disabled" disabled title="${i18nT('list.disabled', '🔒 已失效')}">${i18nT('list.disabled', '🔒 已失效')}</button>`;
             // 预览样式
             const previewClass = isFullMask ? 'masked' : (isPartial ? 'partial-shown' : '');
             const previewSpan = previewClass ? `<span class="${previewClass}">${escapeHtml(preview)}</span>` : escapeHtml(preview);
@@ -1646,7 +1693,7 @@ async function loadShares() {
                     <div class="list-item-info">
                         <div class="list-item-title">${icon} ${previewSpan} ${devTag}</div>
                         <div class="list-item-meta">
-                            <span>📅 发布于 ${dateStr}</span>
+                            <span>${i18nT('list.created_prefix', '📅 发布于 ')}${dateStr}</span>
                             ${statusTag}
                         </div>
                         ${(viewedInfo || burnedInfo) ? `<div class="list-item-submeta">${viewedInfo}${burnedInfo}</div>` : ''}
@@ -1676,7 +1723,7 @@ async function loadShares() {
     } catch (e) {
         const container = document.getElementById('shares-list');
         if (container) {
-            container.innerHTML = '<p style="color:#ff8080; text-align:center; padding:20px; font-size:0.9em;">加载失败: ' + escapeHtml(e.message) + '</p>';
+            container.innerHTML = '<p style="color:#ff8080; text-align:center; padding:20px; font-size:0.9em;">' + i18nT('sidebar.load_error', '加载失败: ') + escapeHtml(e.message) + '</p>';
         }
         console.error('loadShares error:', e);
     }
@@ -1703,12 +1750,30 @@ async function loadStats() {
         if (fillEl) fillEl.style.width = percent + '%';
         if (data.storage_used >= data.storage_limit) {
             document.querySelectorAll('.btn').forEach(b => b.disabled = true);
-            toast('存储已满', 'error');
+            toast(i18nT('toast.storage_full', '存储已满'), 'error');
         }
     } catch (e) {
         console.error('loadStats error:', e);
     }
 }
+
+// === i18n 启动 ===
+// 先应用 i18n，再启动其他加载（保证所有静态文本先翻译）
+(function initI18n() {
+    const lang = window.i18nInit();
+    window.i18nApply(lang);
+    // 语言切换器
+    const sel = document.getElementById('lang-switcher');
+    if (sel) {
+        sel.value = lang;
+        sel.addEventListener('change', (e) => window.i18nSetLang(e.target.value));
+    }
+    // 语言切换后，触发列表/统计刷新（重新渲染动态内容）
+    document.addEventListener('vshare:langchange', () => {
+        try { loadShares(); } catch(e) {}
+        try { loadStats(); } catch(e) {}
+    });
+})();
 
 // === 启动 ===
 loadShares();

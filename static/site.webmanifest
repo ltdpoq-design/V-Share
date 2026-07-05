@@ -1,21 +1,16 @@
 {
   "name": "V Share",
   "short_name": "V Share",
-  "description": "\u65e0\u4efb\u4f55\u9690\u79c1\u7684\u4eba\u4eba\u53ef\u7528\u7684\u591a\u8bbe\u5907\u5185\u5bb9\u4fbf\u6377\u5206\u4eab\u5668",
+  "description": "A privacy-free, multi-device content & file sharing tool",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#050514",
   "theme_color": "#00d4ff",
   "icons": [
     {
-      "src": "/static/favicon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/static/favicon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
   ]
 }

@@ -1,17 +1,24 @@
 """
 share.vivi.homes - Flask 后端
-小婷写的隐私分享服务 v2.1.0
+小婷写的隐私分享服务 v3.0.0
 
-新功能:
-- 设备标签（创建时记录）
-- 阅后即焚（burn_after_read）
-- 状态: active / burned / expired / soft-deleted
-- /api/version 返回版本号
+v3.0.0:
+- 六语言 i18n (en / zh-CN / zh-TW / ja / ko / es / fr)
+- 重画 favicon (单 SVG 多尺寸)
+- 服务端 API 错误文案本地化 (Accept-Language + ?lang=)
+- /api/i18n/<lang> 暴露语言字典
+- 新功能:
+  - 设备标签（创建时记录）
+  - 阅后即焚（burn_after_read）
+  - 状态: active / burned / expired / soft-deleted
+  - /api/version 返回版本号
 """
 import os
 import sqlite3
 import uuid
 import time
+import json
+import re
 from flask import Flask, request, jsonify, send_from_directory, abort
 import threading
 
@@ -19,6 +26,7 @@ import threading
 BASE_DIR = '/var/www/sites/shares'
 UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
 DB_PATH = os.path.join(BASE_DIR, 'shares.db')
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
 MAX_FILE_SIZE = 100 * 1024 * 1024  # 100 MB
 MAX_TOTAL_SIZE = 5 * 1024 * 1024 * 1024  # 5 GB
 EXPIRE_OPTIONS = {
@@ -32,9 +40,93 @@ EXPIRE_OPTIONS = {
 SOFT_DELETE_DAYS = 30
 
 # === 版本号 ===
-APP_VERSION = '2.9.2'
-APP_RELEASED = '2026-06-30'
-APP_CHANGELOG = 'NEON DROP · ZERO TRACE · ONE TAP SHARE'
+APP_VERSION = '3.0.0'
+APP_RELEASED = '2026-07-05'
+APP_CHANGELOG = 'GLOBAL · NEON SVG · SIX LANGUAGES'
+
+# === 支持的语言 ===
+SUPPORTED_LANGS = ['en', 'zh-CN', 'zh-TW', 'ja', 'ko', 'es', 'fr']
+DEFAULT_LANG = 'en'
+
+# 简单 Accept-Language 解析（取 q 值最高的命中）
+_ACCEPT_RE = re.compile(r'([a-zA-Z]{2,3}(?:-[a-zA-Z0-9]+)*)\s*(?:;\s*q\s*=\s*([0-9.]+))?', re.I)
+
+
+def _parse_accept_language(header):
+    """解析 Accept-Language 头，返回最佳匹配语言代码"""
+    if not header:
+        return None
+    candidates = []
+    for m in _ACCEPT_RE.finditer(header):
+        tag = m.group(1)
+        q_str = m.group(2)
+        try:
+            q = float(q_str) if q_str else 1.0
+        except ValueError:
+            q = 1.0
+        # 规范化 (zh-cn → zh-CN)
+        parts = tag.split('-')
+        if len(parts) == 2:
+            tag = parts[0].lower() + '-' + parts[1].upper()
+        else:
+            tag = tag.lower()
+        candidates.append((q, tag))
+    candidates.sort(key=lambda x: -x[0])
+    for _, tag in candidates:
+        if tag in SUPPORTED_LANGS:
+            return tag
+        # 主语言命中（如 zh 命中 zh-CN）
+        primary = tag.split('-')[0].lower()
+        for sl in SUPPORTED_LANGS:
+            if sl.split('-')[0].lower() == primary:
+                return sl
+    return None
+
+
+_I18N_CACHE = {}
+
+
+def load_i18n(lang):
+    """加载语言字典，缓存到内存"""
+    if lang in _I18N_CACHE:
+        return _I18N_CACHE[lang]
+    path = os.path.join(STATIC_DIR, 'i18n', lang + '.json')
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        _I18N_CACHE[lang] = data
+        return data
+    except Exception:
+        return None
+
+
+def detect_lang():
+    """根据 ?lang= > Accept-Language > 默认 确定语言"""
+    q_lang = request.args.get('lang')
+    if q_lang and q_lang in SUPPORTED_LANGS:
+        return q_lang
+    q_lang = request.form.get('lang')
+    if q_lang and q_lang in SUPPORTED_LANGS:
+        return q_lang
+    header = request.headers.get('Accept-Language', '')
+    parsed = _parse_accept_language(header)
+    return parsed or DEFAULT_LANG
+
+
+def t(key, lang=None):
+    """查 i18n 字符串，找不到回退 en，再找不到回退 key 本身"""
+    if lang is None:
+        lang = detect_lang()
+    data = load_i18n(lang)
+    if data and key in data:
+        return data[key]
+    if lang != DEFAULT_LANG:
+        data = load_i18n(DEFAULT_LANG)
+        if data and key in data:
+            return data[key]
+    return key
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 app = Flask(__name__)
@@ -133,11 +225,44 @@ def index():
 
 @app.route('/api/version')
 def version():
+    lang = detect_lang()
     return jsonify({
         'version': APP_VERSION,
         'released': APP_RELEASED,
         'changelog': APP_CHANGELOG,
-        'name': 'share.vivi.homes'
+        'name': 'share.vivi.homes',
+        'lang': lang,
+        'supported_langs': SUPPORTED_LANGS,
+    })
+
+
+@app.route('/api/i18n/<lang>')
+def get_i18n(lang):
+    """返回指定语言字典（前端 fallback 用）"""
+    if lang not in SUPPORTED_LANGS:
+        lang = DEFAULT_LANG
+    data = load_i18n(lang)
+    if data is None:
+        return jsonify({'error': 'lang_not_found', 'message': 'Language not found'}), 404
+    return jsonify(data)
+
+
+@app.route('/api/i18n')
+def list_i18n():
+    """返回支持的语种列表 + 元信息"""
+    out = []
+    for lang in SUPPORTED_LANGS:
+        data = load_i18n(lang)
+        meta = (data or {}).get('_meta', {})
+        out.append({
+            'code': lang,
+            'name': meta.get('name', lang),
+            'dir': meta.get('dir', 'ltr'),
+        })
+    return jsonify({
+        'default': DEFAULT_LANG,
+        'supported': out,
+        'current': detect_lang(),
     })
 
 
@@ -147,7 +272,7 @@ def create_share():
     if current_size >= MAX_TOTAL_SIZE:
         return jsonify({
             'error': 'storage_full',
-            'message': '存储空间已满 (5 GB)，无法创建新分享'
+            'message': t('error.storage_full')
         }), 507
 
     expire = request.form.get('expire', '72h')
@@ -180,7 +305,7 @@ def create_share():
                 os.remove(stored_path)
                 return jsonify({
                     'error': 'storage_full',
-                    'message': '文件上传后超过 5 GB 上限'
+                    'message': t('error.storage_full_file')
                 }), 507
             file_path = stored_name
             file_name = f.filename
@@ -216,7 +341,7 @@ def create_share():
             content = text
 
     if share_type == 'text' and not content and not file_path:
-        return jsonify({'error': 'empty', 'message': '内容或文件不能为空'}), 400
+        return jsonify({'error': 'empty', 'message': t('error.empty')}), 400
 
     with get_db() as db:
         db.execute('''

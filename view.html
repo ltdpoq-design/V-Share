@@ -7,11 +7,12 @@
 <meta name="description" content="V Share - 无任何隐私的人人可用的多设备内容便捷分享器">
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-<!-- Favicon -->
+<!-- Favicon (v3.0.0: 单一 SVG) -->
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
 <link rel="manifest" href="/static/site.webmanifest">
+
+<!-- i18n engine (v3.0.0) -->
+<script src="/static/i18n.js"></script>
 
 <title>V Share - 无任何隐私的人人可用的多设备内容便捷分享器</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
@@ -613,32 +614,44 @@ body {
 <div class="scan-line"></div>
 
 <div class="container">
+    <!-- v3.0.0: 语言切换器 -->
+    <div class="lang-switcher-wrap">
+        <select id="lang-switcher" class="lang-switcher" aria-label="Language">
+            <option value="en">🌐 English</option>
+            <option value="zh-CN">🌐 简体中文</option>
+            <option value="zh-TW">🌐 繁體中文</option>
+            <option value="ja">🌐 日本語</option>
+            <option value="ko">🌐 한국어</option>
+            <option value="es">🌐 Español</option>
+            <option value="fr">🌐 Français</option>
+        </select>
+    </div>
     <div class="header">
-        <a href="/" class="back-btn">← 返回主页</a>
+        <a href="/" class="back-btn" data-i18n="view.back">← 返回主页</a>
         <div class="logo">V SHARE</div>
         <div style="width: 110px;"></div>
     </div>
     <div id="content">
         <div class="card" style="text-align: center;">
-            <p style="opacity: 0.6;">加载中...</p>
+            <p style="opacity: 0.6;" data-i18n="view.loading">加载中...</p>
         </div>
     </div>
     <div class="version-bar">
         <div class="version-line-main">
             🚀 <strong id="app-name">V Share</strong>
-            v<span id="app-version">2.9.2</span>
-            · 发布于 <span id="app-released">2026-06-30</span>
+            v<span id="app-version">3.0.0</span>
+            · <span data-i18n="version.released_prefix">Released</span> <span id="app-released">2026-07-05</span>
         </div>
         <div class="version-line-sub">
             <span id="app-changelog">NEON DROP · ZERO TRACE · ONE TAP SHARE</span>
         </div>
-        <div class="version-line-future">
+        <div class="version-line-future" data-i18n="site.footer_slogan">
             「 链接来过，痕迹不必留下 」
         </div>
     </div>
 </div>
 
-<a href="/" class="fab-share">+ 分享新内容</a>
+<a href="/" class="fab-share" data-i18n="fab.share_new">+ 分享新内容</a>
 
 <script>
 const shareId = location.pathname.split('/').pop();
@@ -687,7 +700,13 @@ function escapeJs(s) {
     return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
 }
 function formatTime(ts) {
-    return new Date(ts * 1000).toLocaleString('zh-CN');
+    // 用 i18n 语言环境的日期格式（toLocaleString 会用当前 navigator.language）
+    try {
+        const lang = (window.__vshareLang || 'en').replace('-', '-');
+        return new Date(ts * 1000).toLocaleString(lang);
+    } catch (e) {
+        return new Date(ts * 1000).toLocaleString('zh-CN');
+    }
 }
 function formatRemain(s) {
     if (s < 0) s = 0;
@@ -709,7 +728,7 @@ function formatRemain(s) {
 function copyToClipboard(text) {
     if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(
-            () => showToast('✓ 已复制'),
+            () => showToast(i18nT('toast.copied', '✓ 已复制')),
             () => fallbackCopy(text)
         );
     } else fallbackCopy(text);
@@ -719,7 +738,7 @@ function fallbackCopy(text) {
     ta.value = text;
     ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); showToast('✓ 已复制'); } catch(e) { showToast('复制失败', true); }
+    try { document.execCommand('copy'); showToast(i18nT('toast.copied', '✓ 已复制')); } catch(e) { showToast(i18nT('toast.copy_failed', '复制失败'), true); }
     document.body.removeChild(ta);
 }
 function showToast(msg, isError) {
@@ -751,6 +770,21 @@ async function loadVersion() {
 }
 loadVersion();
 
+// === i18n 启动 ===
+(function initI18n() {
+    const lang = window.i18nInit();
+    window.i18nApply(lang);
+    const sel = document.getElementById('lang-switcher');
+    if (sel) {
+        sel.value = lang;
+        sel.addEventListener('change', (e) => window.i18nSetLang(e.target.value));
+    }
+    // 语言切换后重渲染
+    document.addEventListener('vshare:langchange', () => {
+        try { loadPreview(); } catch(e) {}
+    });
+})();
+
 // 阶段 1: 预览（不焚毁，检查状态 + 阅后即焚警告）
 async function loadPreview() {
     try {
@@ -758,7 +792,7 @@ async function loadPreview() {
         const data = await resp.json();
         const el = document.getElementById('content');
         if (data.error === 'not_found') {
-            el.innerHTML = '<div class="card" style="text-align:center;"><h2 style="color:#ff8080">❌ 分享不存在或已彻底删除</h2><p style="opacity:0.6; margin-top:12px;">分享可能在 30 天前已经过期并删除</p></div>';
+            el.innerHTML = '<div class="card" style="text-align:center;"><h2 style="color:#ff8080">' + i18nT('view.not_found', '❌ 分享不存在或已彻底删除') + '</h2><p style="opacity:0.6; margin-top:12px;">' + i18nT('view.not_found_hint', '分享可能在 30 天前已经过期并删除') + '</p></div>';
             return;
         }
 
@@ -770,7 +804,7 @@ async function loadPreview() {
         // 不是阅后即焚 → 直接加载
         loadFull(false);
     } catch (e) {
-        document.getElementById('content').innerHTML = '<div class="card" style="text-align:center; color:#ff8080;">网络错误: ' + e.message + '</div>';
+        document.getElementById('content').innerHTML = '<div class="card" style="text-align:center; color:#ff8080;">' + i18nT('view.network_error', '网络错误: ') + escapeHtml(e.message) + '</div>';
     }
 }
 
@@ -781,7 +815,7 @@ async function loadFull(confirmedBurn) {
         const data = await resp.json();
         renderContent(data);
     } catch (e) {
-        document.getElementById('content').innerHTML = '<div class="card" style="text-align:center; color:#ff8080;">网络错误: ' + e.message + '</div>';
+        document.getElementById('content').innerHTML = '<div class="card" style="text-align:center; color:#ff8080;">' + i18nT('view.network_error', '网络错误: ') + escapeHtml(e.message) + '</div>';
     }
 }
 
@@ -792,19 +826,15 @@ function showBurnWarning(data, el) {
     el.innerHTML = `
         <div class="card warning-card">
             <div class="warning-icon">🔥</div>
-            <div class="warning-title">阅后即焚</div>
-            <div class="warning-text">
-                这是一条<strong>阅后即焚</strong>消息<br>
-                你<strong>阅读后内容将立即消失</strong>，无法恢复<br>
-                请确认你已准备好接收内容
-            </div>
+            <div class="warning-title">${i18nT('view.burn_warning_title', '阅后即焚')}</div>
+            <div class="warning-text">${i18nT('view.burn_warning_body', '这是一条<strong>阅后即焚</strong>消息<br>你<strong>阅读后内容将立即消失</strong>，无法恢复<br>请确认你已准备好接收内容')}</div>
             <div class="warning-countdown" id="burn-countdown">5</div>
             <div class="warning-text" style="font-size: 0.85em; opacity: 0.6;">
-                ${remain > 0 ? `此消息将在 ${remainStr} 后过期删除` : '此消息已过期'}
+                ${remain > 0 ? i18nT('view.burn_countdown_hint', '此消息将在 ') + remainStr + i18nT('view.burn_expired_infix', ' 后过期删除') : i18nT('view.burn_countdown_expired', '此消息已过期')}
             </div>
             <div class="warning-actions">
-                <button class="btn-warning" id="confirm-burn-btn">🔥 我已知晓，立即查看</button>
-                <a href="/" class="btn-back">← 返回主页</a>
+                <button class="btn-warning" id="confirm-burn-btn" disabled>${i18nT('view.burn_confirm_btn', '🔥 我已知晓，立即查看')}</button>
+                <a href="/" class="btn-back">${i18nT('view.back', '← 返回主页')}</a>
             </div>
         </div>
     `;
@@ -820,7 +850,7 @@ function showBurnWarning(data, el) {
             clearInterval(cdInterval);
             cdEl.textContent = '✓';
             btn.disabled = false;
-            btn.textContent = '🔥 立即查看内容';
+            btn.textContent = i18nT('view.burn_confirm_btn_ready', '🔥 立即查看内容');
         }
     }, 1000);
     btn.onclick = () => {
@@ -834,7 +864,7 @@ function renderContent(data) {
     try {
     const el = document.getElementById('content');
         if (data.error === 'not_found') {
-            el.innerHTML = '<div class="card" style="text-align:center;"><h2 style="color:#ff8080">❌ 分享不存在或已彻底删除</h2><p style="opacity:0.6; margin-top:12px;">分享可能在 30 天前已经过期并删除</p></div>';
+            el.innerHTML = '<div class="card" style="text-align:center;"><h2 style="color:#ff8080">' + i18nT('view.not_found', '❌ 分享不存在或已彻底删除') + '</h2><p style="opacity:0.6; margin-top:12px;">' + i18nT('view.not_found_hint', '分享可能在 30 天前已经过期并删除') + '</p></div>';
             return;
         }
 
@@ -845,9 +875,9 @@ function renderContent(data) {
         const devTag = data.device && data.device !== 'unknown' ? `<span class="device-tag">${escapeHtml(deviceShort(data.device))}</span>` : '';
         // 状态标签
         let statusTag = '';
-        if (isBurned) statusTag = '<span class="burned-tag">🔥 已焚</span>';
-        else if (data.expired) statusTag = '<span class="expired-tag" style="color:#ff8080;">⏰ 已过期</span>';
-        else statusTag = '<span style="color: var(--accent);">✓ 有效</span>';
+        if (isBurned) statusTag = '<span class="burned-tag">' + i18nT('view.info_burned', '🔥 已焚') + '</span>';
+        else if (data.expired) statusTag = '<span class="expired-tag" style="color:#ff8080;">' + i18nT('view.info_expired', '⏰ 已过期') + '</span>';
+        else statusTag = '<span style="color: var(--accent);">' + i18nT('view.info_valid', '✓ 有效') + '</span>';
 
         // 创建时间
         const dt = new Date(data.created_at * 1000);
@@ -857,33 +887,33 @@ function renderContent(data) {
         let html = '';
         if (isBurned) {
             html += `<div class="expired-banner" style="border-color: #ff6400; background: rgba(255, 100, 0, 0.1); color: #ff8800;">
-                <h2>🔥 此分享已焚毁</h2>
-                <p style="margin-top:8px;">阅后即焚 - 第一个查看的人阅读后即焚毁</p>
+                <h2>${i18nT('view.burned_banner_title', '🔥 此分享已焚毁')}</h2>
+                <p style="margin-top:8px;">${i18nT('view.burned_banner_sub', '阅后即焚 - 第一个查看的人阅读后即焚毁')}</p>
             </div>`;
         } else if (data.expired) {
             html += `<div class="expired-banner">
-                <h2>⏰ 此分享已过期</h2>
-                <p style="margin-top:8px;">内容已打码保留 30 天后彻底删除</p>
+                <h2>${i18nT('view.expired_banner_title', '⏰ 此分享已过期')}</h2>
+                <p style="margin-top:8px;">${i18nT('view.expired_banner_sub', '内容已打码保留 30 天后彻底删除')}</p>
             </div>`;
         }
 
         html += `<div class="card info-card">
-            <h2>ℹ️ 分享信息 ${statusTag}</h2>
+            <h2>${i18nT('view.info_title', 'ℹ️ 分享信息')} ${statusTag}</h2>
             <div class="info-grid">
                 <div class="info-item">
-                    <div class="info-label">📱 发布于</div>
-                    <div class="info-value">${devTag || '<span style="opacity:0.5;">未知</span>'}</div>
+                    <div class="info-label">${i18nT('view.info_device', '📱 发布于')}</div>
+                    <div class="info-value">${devTag || '<span style="opacity:0.5;">' + i18nT('view.info_device_unknown', '未知') + '</span>'}</div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">📅 创建时间</div>
+                    <div class="info-label">${i18nT('view.info_created', '📅 创建时间')}</div>
                     <div class="info-value">${dateStr}</div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">📂 分享类型</div>
-                    <div class="info-value">${data.type === 'url' ? '🔗 网址' : data.type === 'file' ? '📎 文件' : '📝 文本'}</div>
+                    <div class="info-label">${i18nT('view.info_type', '📂 分享类型')}</div>
+                    <div class="info-value">${data.type === 'url' ? i18nT('view.info_type_url', '🔗 网址') : data.type === 'file' ? i18nT('view.info_type_file', '📎 文件') : i18nT('view.info_type_text', '📝 文本')}</div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">${isBurned ? '🔥 焚毁时间' : (data.expired ? '⏰ 过期时间' : '⏱ 剩余时间')}</div>
+                    <div class="info-label">${isBurned ? i18nT('view.info_burned_at', '🔥 焚毁时间') : (data.expired ? i18nT('view.info_expired_at', '⏰ 过期时间') : i18nT('view.info_remain', '⏱ 剩余时间'))}</div>
                     <div class="info-value" id="remain-time">${isBurned ? formatTime(data.burned_at) : (data.expired ? formatTime(data.expires_at) : formatRemain(data.expires_at - Math.floor(Date.now() / 1000)))}</div>
                 </div>
             </div>
@@ -893,12 +923,12 @@ function renderContent(data) {
         if (data.expired || isBurned) {
             if (data.type === 'file') {
                 html += `<div class="card">
-                    <h2>📎 文件 (已删除)</h2>
-                    <div class="content-box"><span class="masked">文件已被删除</span></div>
+                    <h2>${i18nT('view.content_file_title', '📎 文件')} ${i18nT('view.content_masked', ' (已删除)')}</h2>
+                    <div class="content-box"><span class="masked">${i18nT('view.file_deleted', '文件已被删除')}</span></div>
                 </div>`;
             } else {
                 html += `<div class="card">
-                    <h2>${data.type === 'url' ? '🔗 网址' : '📝 文本'} (已打码)</h2>
+                    <h2>${data.type === 'url' ? i18nT('view.content_url_title', '🔗 网址') : i18nT('view.content_text_title', '📝 文本')} ${i18nT('view.content_masked', ' (已打码)')}</h2>
                     <div class="content-box"><span class="masked">${escapeHtml(data.content || '')}</span></div>
                 </div>`;
             }
@@ -914,34 +944,34 @@ function renderContent(data) {
             qrLabel = data.content;
         } else if (data.type === 'text') {
             qrContent = data.content.length < 200 ? data.content : shareUrl;
-            qrLabel = data.content.length < 200 ? '文本内容' : '分享链接';
+            qrLabel = data.content.length < 200 ? i18nT('view.qr_text', '文本内容') : i18nT('view.qr_text_long', '分享链接');
         } else {
             qrContent = shareUrl;
-            qrLabel = '文件分享链接';
+            qrLabel = i18nT('view.qr_file', '文件分享链接');
         }
 
         if (data.type === 'url') {
             html += `<div class="card">
-                <h2>🔗 网址</h2>
+                <h2>${i18nT('view.content_url_title', '🔗 网址')}</h2>
                 <div class="content-box url"><a href="${escapeHtml(data.content)}" target="_blank" rel="noopener">${escapeHtml(data.content)}</a></div>
                 <div class="action-row">
-                    <a href="${escapeHtml(data.content)}" target="_blank" rel="noopener" class="btn btn-go">🚀 跳转打开</a>
-                    <button class="btn-copy" data-copy="${escapeJs(data.content)}">📋 复制网址</button>
+                    <a href="${escapeHtml(data.content)}" target="_blank" rel="noopener" class="btn btn-go">${i18nT('view.url_btn', '🚀 跳转打开')}</a>
+                    <button class="btn-copy" data-copy="${escapeJs(data.content)}">${i18nT('view.url_copy', '📋 复制网址')}</button>
                 </div>
             </div>`;
         } else if (data.type === 'text') {
             html += `<div class="card">
-                <h2>📝 文本</h2>
+                <h2>${i18nT('view.content_text_title', '📝 文本')}</h2>
                 <div class="content-box">${escapeHtml(data.content)}</div>
                 <div class="action-row">
-                    <button class="btn-copy" data-copy="${escapeJs(data.content)}">📋 复制文本</button>
+                    <button class="btn-copy" data-copy="${escapeJs(data.content)}">${i18nT('view.text_copy', '📋 复制文本')}</button>
                 </div>
             </div>`;
         } else if (data.type === 'file') {
             const size = data.file_size ? (data.file_size / 1024 / 1024).toFixed(2) + ' MB' : '';
             const fileUrl = '/uploads/' + encodeURIComponent(data.file_path);
             html += `<div class="card">
-                <h2>📎 文件</h2>
+                <h2>${i18nT('view.content_file_title', '📎 文件')}</h2>
                 <div class="file-info">
                     <div class="file-icon-large">📄</div>
                     <div style="flex:1; min-width: 0;">
@@ -950,13 +980,13 @@ function renderContent(data) {
                     </div>
                 </div>
                 <div class="action-row">
-                    <a href="${fileUrl}" class="btn btn-go" target="_blank" download>⬇️ 下载文件</a>
+                    <a href="${fileUrl}" class="btn btn-go" target="_blank" download>${i18nT('view.file_download', '⬇️ 下载文件')}</a>
                 </div>
             </div>`;
         }
 
         html += `<div class="card">
-            <h2>📱 扫码查看${data.type === 'url' ? '网址' : data.type === 'file' ? '文件' : '文本'}</h2>
+            <h2>${i18nT('view.qr_title', '📱 扫码查看')} ${data.type === 'url' ? i18nT('view.qr_url', 'URL') : data.type === 'file' ? i18nT('view.qr_file', 'File') : i18nT('view.qr_text', 'Text')}</h2>
             <div class="qr-wrapper" id="qrcode-area">
                 <div id="qr-canvas"></div>
             </div>
@@ -964,10 +994,10 @@ function renderContent(data) {
         </div>`;
 
         html += `<div class="card">
-            <h2>🔗 分享本页链接</h2>
+            <h2>${i18nT('view.share_page_title', '🔗 分享本页链接')}</h2>
             <div class="content-box" style="word-break: break-all; font-size: 0.9em; opacity: 0.8;">${escapeHtml(shareUrl)}</div>
             <div class="action-row">
-                <button class="btn-copy" data-copy="${escapeJs(shareUrl)}">📋 复制本页面链接</button>
+                <button class="btn-copy" data-copy="${escapeJs(shareUrl)}">${i18nT('view.share_page_copy', '📋 复制本页面链接')}</button>
             </div>
         </div>`;
 
@@ -988,7 +1018,7 @@ function renderContent(data) {
                 colorLight: '#fff'
             });
         } catch (e) {
-            document.getElementById('qr-canvas').innerHTML = '<p style="color:#ff8080;">二维码生成失败</p>';
+            document.getElementById('qr-canvas').innerHTML = '<p style="color:#ff8080;">' + i18nT('view.qr_failed', '二维码生成失败') + '</p>';
         }
 
         // 实时倒计时
@@ -1003,10 +1033,10 @@ function renderContent(data) {
                         const mask = document.createElement('div');
                         mask.id = 'qr-mask';
                         mask.className = 'qr-mask';
-                        mask.innerHTML = '<div class="icon">🚫</div><div>已过期</div><div class="sub">二维码已失效</div>';
+                        mask.innerHTML = '<div class="icon">🚫</div><div>' + i18nT('view.qr_expired', '已过期') + '</div><div class="sub">' + i18nT('view.qr_expired_sub', '二维码已失效') + '</div>';
                         qrWrapper.appendChild(mask);
                     }
-                    remainEl.textContent = '已过期';
+                    remainEl.textContent = i18nT('list.status_expired', '已过期');
                     remainEl.style.color = '#ff8080';
                 } else {
                     remainEl.textContent = formatRemain(newRemain);
@@ -1014,7 +1044,7 @@ function renderContent(data) {
             }, 1000);
         }
     } catch (e) {
-        document.getElementById('content').innerHTML = '<div class="card" style="text-align:center; color:#ff8080;">网络错误: ' + e.message + '</div>';
+        document.getElementById('content').innerHTML = '<div class="card" style="text-align:center; color:#ff8080;">' + i18nT('view.network_error', '网络错误: ') + escapeHtml(e.message) + '</div>';
     }
 }
 
